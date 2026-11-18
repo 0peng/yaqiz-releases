@@ -22,7 +22,7 @@
   <a href="#what-yaqiz-does"><strong>What it does</strong></a> ·
   <a href="#architecture"><strong>Architecture</strong></a> ·
   <a href="#install-step-by-step"><strong>Install</strong></a> ·
-  <a href="#upgrade"><strong>Upgrade</strong></a>
+  <a href="#upgrades-renewals-and-support"><strong>Upgrade</strong></a>
 </p>
 
 ---
@@ -117,6 +117,16 @@ and the database and queue are never published · random secrets generated at in
 
 ## Install, step by step
 
+Yaqiz is installed on **your own Linux server or VM, inside your network**. The whole installation takes about
+15 minutes.
+
+### What you receive from your vendor
+
+| | |
+|---|---|
+| 🔗 **This page** | Where you download the installation package: the newest version is always under [Releases → Latest](https://github.com/0peng/yaqiz-releases/releases/latest) |
+| 🔑 **Your license file** | `your-company.lic`, sent to you separately. It names your organization, the expiry date and your limits |
+
 ### What you need
 
 | Item | Requirement |
@@ -127,37 +137,62 @@ and the database and queue are never published · random secrets generated at in
 | Network | A DNS name for the server (e.g. `vm.example.com`); inbound TCP **443** and **80**. Internet access is **not** required |
 | Certificate | Your TLS certificate (full chain) and private key, or a self-signed one for a trial |
 | Time | Server clock synchronized (NTP) |
-| License | The license file (`.lic`) from your vendor |
 | Access | `root` or `sudo` on the server |
 
-Check Docker on the server:
+### 1. Prepare the server
+
+Install Docker with the Compose plugin. On Ubuntu or Debian with internet access:
+
+```bash
+curl -fsSL https://get.docker.com | sudo sh
+```
+
+On RHEL / Rocky follow the [Docker installation guide](https://docs.docker.com/engine/install/); on an air-gapped
+server, install Docker from your internal package mirror. Then check it:
 
 ```bash
 docker version && docker compose version
 ```
 
-### 1. Download and verify
+### 2. Download the release
 
-On any computer with internet access, download both files of the [latest release](https://github.com/0peng/yaqiz-releases/releases/latest):
-`yaqiz-<version>-onprem.tar.gz` and `yaqiz-<version>-onprem.tar.gz.sha256`. Verify the download (on macOS use
-`shasum -a 256 -c`):
-
-```bash
-sha256sum -c yaqiz-1.1.0-onprem.tar.gz.sha256
-```
-
-It must print `OK`. Copy the package and your license file to the server (for air-gapped servers, use your approved
-transfer method).
-
-### 2. Extract into the installation folder
-
-Keep this folder: upgrades are done in the same place.
+Run all the following commands in the same terminal. Set the version you are installing (the newest one is shown on
+the [Releases page](https://github.com/0peng/yaqiz-releases/releases/latest)):
 
 ```bash
-sudo mkdir -p /opt/yaqiz && sudo tar xzf yaqiz-1.1.0-onprem.tar.gz --strip-components=1 -C /opt/yaqiz
+VERSION=1.1.0
 ```
 
-### 3. Add your TLS certificate
+**Server with internet access** — download both files directly on the server:
+
+```bash
+curl -LO https://github.com/0peng/yaqiz-releases/releases/download/v$VERSION/yaqiz-$VERSION-onprem.tar.gz
+```
+
+```bash
+curl -LO https://github.com/0peng/yaqiz-releases/releases/download/v$VERSION/yaqiz-$VERSION-onprem.tar.gz.sha256
+```
+
+**Air-gapped server** — download both files from the [Releases page](https://github.com/0peng/yaqiz-releases/releases/latest)
+on a computer with internet access, then copy them to the server with your approved transfer method (USB drive, file
+share, SCP).
+
+Copy your license file to the server as well, for example to your home folder.
+
+### 3. Verify and extract
+
+```bash
+sha256sum -c yaqiz-$VERSION-onprem.tar.gz.sha256
+```
+
+It must print `OK` (on macOS: `shasum -a 256 -c …`). Extract into the installation folder — keep this folder, upgrades
+are done in the same place:
+
+```bash
+sudo mkdir -p /opt/yaqiz && sudo tar xzf yaqiz-$VERSION-onprem.tar.gz --strip-components=1 -C /opt/yaqiz
+```
+
+### 4. Add your TLS certificate
 
 ```bash
 sudo cp fullchain.pem /opt/yaqiz/deploy/certs/tls.crt && sudo cp private.key /opt/yaqiz/deploy/certs/tls.key && sudo chmod 600 /opt/yaqiz/deploy/certs/tls.key
@@ -167,55 +202,74 @@ For a trial without a certificate, skip this step and use `--tls self-signed` be
 CA (LDAPS, internal Jira or GitLab, a TLS-inspecting proxy), copy those CA certificates to
 `/opt/yaqiz/deploy/ca/*.crt`.
 
-### 4. Install with your license
+### 5. Install with your license
 
 ```bash
-cd /opt/yaqiz && sudo ./deploy/install.sh --host vm.example.com --tls provided --offline yaqiz-1.1.0-images.tar.gz --license your-company.lic
+cd /opt/yaqiz && sudo ./deploy/install.sh --host vm.example.com --tls provided --offline yaqiz-$VERSION-images.tar.gz --license ~/your-company.lic
 ```
 
 The installer checks the license file first, generates random secrets, loads the container images, starts the
-platform, waits until it is healthy, installs the license and prints the address and the administrator password.
-A first installation takes a few minutes.
+platform, waits until it is healthy, installs the license and finally prints the address and the administrator
+password. A first installation takes a few minutes.
 
 | Option | Meaning |
 |---|---|
 | `--host NAME` | The DNS name users open in the browser |
-| `--tls provided` / `self-signed` | Use your certificate from step 3, or generate a self-signed one |
+| `--tls provided` / `self-signed` | Use your certificate from step 4, or generate a self-signed one |
 | `--https-port N` / `--http-port N` | Different ports (default 443 / 80) |
 | `--offline FILE` | Load the container images from the package (no internet needed) |
 | `--license FILE` | Install your license as part of the installation |
 
-### 5. Sign in and secure the platform
+### 6. Sign in and start using Yaqiz
 
 1. Open `https://vm.example.com` and sign in as **admin** with the printed password (also `YQ_ADMIN_PASSWORD` in
    `/opt/yaqiz/.env`).
 2. **Profile → Change password**, then **Profile → Two-step verification**.
 3. **Settings → License** shows who the installation is licensed to, the expiry date and the usage.
 4. Connect **LDAP / Active Directory** or **single sign-on**, configure e-mail, and create users, groups and roles.
-5. Schedule nightly backups (see [Operations](#operations)).
-6. Bring in your data: upload scanner reports, connect your scanners under **Upstream**, or send results from CI/CD
-   with an API token.
+5. Connect your scanners (Tenable Nessus, ManageEngine and others) under **Upstream**, upload scanner reports, or send
+   results from CI/CD with an API token.
+6. Schedule nightly backups (see [Operations](#operations)).
 
 The complete guide — sizing, TLS, LDAP and single sign-on settings, private CAs, external PostgreSQL, backups and
 troubleshooting — is **`docs/on-prem-installation.md`** inside the package.
 
 ---
 
-## Upgrade
+## Upgrades, renewals and support
 
-Download and verify the new version as in step 1, then extract it **over your installation folder** and upgrade.
-Your settings, certificates, data and backups are kept, and the upgrade takes a backup first.
+**A new version.** Set the new version, download and verify it as in steps 2 and 3, then extract it **over your
+installation folder** and upgrade. Your settings, certificates, data and backups are kept, and the upgrade takes a
+backup first:
 
 ```bash
-sudo tar xzf yaqiz-1.2.0-onprem.tar.gz --strip-components=1 -C /opt/yaqiz
+VERSION=1.2.0
 ```
 
 ```bash
-cd /opt/yaqiz && sudo ./deploy/upgrade.sh --offline yaqiz-1.2.0-images.tar.gz
+sudo tar xzf yaqiz-$VERSION-onprem.tar.gz --strip-components=1 -C /opt/yaqiz
 ```
 
-Each release page lists the exact commands for that version. Afterwards you can delete the previous
+```bash
+cd /opt/yaqiz && sudo ./deploy/upgrade.sh --offline yaqiz-$VERSION-images.tar.gz
+```
+
+Each release page also lists the exact commands for that version. Afterwards you can delete the previous
 `yaqiz-<old version>-images.tar.gz` to free disk space.
+
+**A renewed license or more users and assets.** Your vendor sends you a new license file. Install it under
+**Settings → License**, or on the server — it takes effect immediately, without a restart:
+
+```bash
+cd /opt/yaqiz && sudo ./deploy/license.sh ~/renewal.lic
+```
+
+**Support.** Create a support bundle (versions, status and logs; passwords and secrets are removed) and send the file
+it prints to your vendor:
+
+```bash
+cd /opt/yaqiz && sudo ./deploy/support-bundle.sh
+```
 
 ---
 
