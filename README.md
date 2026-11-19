@@ -19,11 +19,38 @@
 
 <p align="center">
   <a href="https://github.com/0peng/yaqiz-releases/releases/latest"><strong>⬇ Download the latest release</strong></a> ·
+  <a href="#whats-new-in-111"><strong>What's new</strong></a> ·
   <a href="#what-yaqiz-does"><strong>What it does</strong></a> ·
   <a href="#architecture"><strong>Architecture</strong></a> ·
   <a href="#install-step-by-step"><strong>Install</strong></a> ·
   <a href="#upgrades-renewals-and-support"><strong>Upgrade</strong></a>
 </p>
+
+---
+
+## What's new in 1.1.1
+
+A quality release. A full test campaign of about 900 automated cases (valid, invalid, boundary, permission and
+security tests for every function) found 74 issues, and all of them are fixed. These cases now run on every release.
+
+- **Faster asset list:** stays fast even when an asset has thousands of findings and locations.
+- **Safer imports:** an empty, damaged or wrong report file is refused with a clear message. It can no longer be
+  re-imported as "no findings" and close every open finding.
+- **Safer administration:**
+  - Delegated administrators cannot raise their own permissions.
+  - SLA values, rule settings and custom fields are checked when you save them.
+  - The **Read-only mode** and **Minimum password length** settings now take effect.
+- **Clear errors:** a malformed date, number or id gets a message that names the field, instead of a server error.
+
+> [!IMPORTANT]
+> **Upgrading from 1.1.0?**
+>
+> - **Scripts and CI pipelines** must sign in with an API token (`Authorization: Token …`). The browser sign-in
+>   (`/api/v2/auth/login/`) now requires a CSRF token.
+> - **Other changes you may notice** are listed in the
+>   [1.1.1 release notes](https://github.com/0peng/yaqiz-releases/releases/tag/v1.1.1).
+>
+> To upgrade, follow [Upgrades](#upgrades-renewals-and-support): your data and license are kept.
 
 ---
 
@@ -109,7 +136,7 @@ flowchart LR
 | **Valkey** | Job queue and shared cache |
 
 **Security by design:** TLS with HSTS and a strict Content Security Policy · two-step verification, account lockout
-and single sign-on · every query filtered by the user's roles · secrets never shown again after saving and masked in
+and single sign-on · sign-in protected against cross-site request forgery · every query filtered by the user's roles · secrets never shown again after saving and masked in
 the audit log · outbound requests checked against internal and cloud-metadata addresses · containers run unprivileged,
 and the database and queue are never published · random secrets generated at install time in a root-only file.
 
@@ -160,7 +187,7 @@ Run all the following commands in the same terminal. Set the version you are ins
 the [Releases page](https://github.com/0peng/yaqiz-releases/releases/latest)):
 
 ```bash
-VERSION=1.1.0
+VERSION=1.1.1
 ```
 
 **Server with internet access** — download both files directly on the server:
@@ -240,10 +267,10 @@ troubleshooting — is **`docs/on-prem-installation.md`** inside the package.
 
 **A new version.** Set the new version, download and verify it as in steps 2 and 3, then extract it **over your
 installation folder** and upgrade. Your settings, certificates, data and backups are kept, and the upgrade takes a
-backup first:
+backup first. Read the release notes on the release page first: they list the changes you may notice.
 
 ```bash
-VERSION=1.2.0
+VERSION=1.1.1
 ```
 
 ```bash
@@ -285,6 +312,9 @@ Run these in `/opt/yaqiz`:
 | License status / install a renewal | `sudo ./deploy/license.sh` / `sudo ./deploy/license.sh renewal.lic` (or **Settings → License**) |
 | Support bundle for your vendor (passwords and secrets removed) | `sudo ./deploy/support-bundle.sh` |
 | Logs | `sudo docker compose logs -f api worker` |
+
+**Maintenance windows.** **Settings → System → Read-only mode** pauses all changes by users other than superusers.
+Everyone can still sign in, view and export, and a banner explains why changes are paused.
 
 **Licensing.** Licenses are checked on your server, offline. Administrators are reminded 30 days before expiry; after
 expiry and a grace period Yaqiz becomes read-only — nothing is ever deleted, everything stays visible and exportable,
