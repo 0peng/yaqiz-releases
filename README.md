@@ -19,7 +19,7 @@
 
 <p align="center">
   <a href="https://github.com/0peng/yaqiz-releases/releases/latest"><strong>⬇ Download the latest release</strong></a> ·
-  <a href="#whats-new-in-111"><strong>What's new</strong></a> ·
+  <a href="#whats-new-in-112"><strong>What's new</strong></a> ·
   <a href="#what-yaqiz-does"><strong>What it does</strong></a> ·
   <a href="#architecture"><strong>Architecture</strong></a> ·
   <a href="#install-step-by-step"><strong>Install</strong></a> ·
@@ -28,29 +28,35 @@
 
 ---
 
-## What's new in 1.1.1
+## What's new in 1.1.2
 
-A quality release. A full test campaign of about 900 automated cases (valid, invalid, boundary, permission and
-security tests for every function) found 74 issues, and all of them are fixed. These cases now run on every release.
+A security and data-quality release. Every role and permission was tested systematically, and so was every input
+field: about 2,200 new automated test cases, which now run on every release. Everything found is fixed.
 
-- **Faster asset list:** stays fast even when an asset has thousands of findings and locations.
-- **Safer imports:** an empty, damaged or wrong report file is refused with a clear message. It can no longer be
-  re-imported as "no findings" and close every open finding.
-- **Safer administration:**
-  - Delegated administrators cannot raise their own permissions.
-  - SLA values, rule settings and custom fields are checked when you save them.
-  - The **Read-only mode** and **Minimum password length** settings now take effect.
-- **Clear errors:** a malformed date, number or id gets a message that names the field, instead of a server error.
+- **Organizations stay separate:** counts, tags, alerts, e-mails, rule actions and reports show each user only what
+  their own access covers. An object of another organization answers "not found", like one that does not exist.
+- **Notes follow the roles:** Readers view, Writers add and edit, Maintainers and Owners delete. Private notes are
+  visible only to their author.
+- **Status changes need the triage permission:** close, reopen, false positive, risk acceptance, verify, duplicates
+  and reviews.
+- **New for global roles:** a Maintainer or Owner held as a global role can create organizations. Asset Maintainers
+  and Owners can manage which of their assets are in dedupe pools.
+- **Only valid input is accepted:** every field checks its length, format, range and choices. A wrong value gets a
+  clear message next to the field, and nothing is saved.
 
 > [!IMPORTANT]
-> **Upgrading from 1.1.0?**
+> **Upgrading from an earlier version?**
 >
-> - **Scripts and CI pipelines** must sign in with an API token (`Authorization: Token …`). The browser sign-in
->   (`/api/v2/auth/login/`) now requires a CSRF token.
-> - **Other changes you may notice** are listed in the
->   [1.1.1 release notes](https://github.com/0peng/yaqiz-releases/releases/tag/v1.1.1).
+> - **Roles:** Readers can no longer add or edit notes, and Writers can no longer delete notes, even their own.
+>   Users who only had edit rights need **Change finding status** (Writer and above) to verify findings or mark
+>   duplicates.
+> - **Scripts and CI pipelines:** values that were silently accepted before now get a 400 that names the field.
+>   Scripts must sign in with an API token (`Authorization: Token …`).
+> - **The full list** is in the [1.1.2 release notes](https://github.com/0peng/yaqiz-releases/releases/tag/v1.1.2).
+>   Coming from 1.1.0, also read the [1.1.1 release notes](https://github.com/0peng/yaqiz-releases/releases/tag/v1.1.1).
 >
-> To upgrade, follow [Upgrades](#upgrades-renewals-and-support): your data and license are kept.
+> To upgrade, follow [Upgrades](#upgrades-renewals-and-support). Built-in roles are updated automatically; your data
+> and license are kept.
 
 ---
 
@@ -187,7 +193,7 @@ Run all the following commands in the same terminal. Set the version you are ins
 the [Releases page](https://github.com/0peng/yaqiz-releases/releases/latest)):
 
 ```bash
-VERSION=1.1.1
+VERSION=1.1.2
 ```
 
 **Server with internet access** — download both files directly on the server:
@@ -270,7 +276,7 @@ installation folder** and upgrade. Your settings, certificates, data and backups
 backup first. Read the release notes on the release page first: they list the changes you may notice.
 
 ```bash
-VERSION=1.1.1
+VERSION=1.1.2
 ```
 
 ```bash
