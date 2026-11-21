@@ -28,35 +28,34 @@
 
 ---
 
-## What's new in 1.1.2
+## What's new in 1.1.3
 
-A security and data-quality release. Every role and permission was tested systematically, and so was every input
-field: about 2,200 new automated test cases, which now run on every release. Everything found is fixed.
+A security release. Yaqiz was checked with static code analysis, dependency, secret and container scanners, and
+with targeted attack tests on an installed server. Everything found is fixed.
 
-- **Organizations stay separate:** counts, tags, alerts, e-mails, rule actions and reports show each user only what
-  their own access covers. An object of another organization answers "not found", like one that does not exist.
-- **Notes follow the roles:** Readers view, Writers add and edit, Maintainers and Owners delete. Private notes are
-  visible only to their author.
-- **Status changes need the triage permission:** close, reopen, false positive, risk acceptance, verify, duplicates
-  and reviews.
-- **New for global roles:** a Maintainer or Owner held as a global role can create organizations. Asset Maintainers
-  and Owners can manage which of their assets are in dedupe pools.
-- **Only valid input is accepted:** every field checks its length, format, range and choices. A wrong value gets a
-  clear message next to the field, and nothing is saved.
+- **Customer-ready packages:** no demo data, no demo accounts, no test files and no fixed passwords. A new
+  installation holds only your administrator, whose password is generated during installation.
+- **Patched, hardened containers:** current base images with operating-system security updates in every build.
+  Every container runs with only the privileges it needs.
+- **Modern HTTPS only:** TLS 1.2 and 1.3 with forward-secret ciphers.
+- **Safer integrations:** webhooks, issue trackers and connectors can no longer reach Yaqiz's own internal services.
+- **Robust against crafted input:** rule regular expressions have a time limit, and crafted Excel files are refused
+  in moments.
+- **Stable lists:** tables, dashboards and reports keep the same order between refreshes and from page to page.
 
 > [!IMPORTANT]
 > **Upgrading from an earlier version?**
 >
-> - **Roles:** Readers can no longer add or edit notes, and Writers can no longer delete notes, even their own.
->   Users who only had edit rights need **Change finding status** (Writer and above) to verify findings or mark
->   duplicates.
-> - **Scripts and CI pipelines:** values that were silently accepted before now get a 400 that names the field.
->   Scripts must sign in with an API token (`Authorization: Token …`).
-> - **The full list** is in the [1.1.2 release notes](https://github.com/0peng/yaqiz-releases/releases/tag/v1.1.2).
->   Coming from 1.1.0, also read the [1.1.1 release notes](https://github.com/0peng/yaqiz-releases/releases/tag/v1.1.1).
+> - **Demo accounts are locked.** Installations made with `--demo` had demo accounts (alice, bob, carol, ci-bot)
+>   that shared one published password. The upgrade switches their passwords off. Remove the demo data under
+>   **Settings → System Settings → Demo data**, or set a new password for a demo account you still use.
+> - `install.sh --demo` no longer exists, and `YQ_SEED_DEMO` in `.env` is ignored.
+> - Very old HTTPS clients without modern ciphers can no longer connect. Every current browser is supported.
+> - **The full list** is in the [1.1.3 release notes](https://github.com/0peng/yaqiz-releases/releases/tag/v1.1.3).
+>   Coming from an older version, also read the [1.1.2](https://github.com/0peng/yaqiz-releases/releases/tag/v1.1.2)
+>   and [1.1.1](https://github.com/0peng/yaqiz-releases/releases/tag/v1.1.1) release notes.
 >
-> To upgrade, follow [Upgrades](#upgrades-renewals-and-support). Built-in roles are updated automatically; your data
-> and license are kept.
+> To upgrade, follow [Upgrades](#upgrades-renewals-and-support). Your data and license are kept.
 
 ---
 
@@ -84,7 +83,7 @@ all: one download contains the whole platform.
 <p align="center">
   <img src="docs/images/finding-detail.png" alt="Finding detail for Log4Shell: known exploited, EPSS 97.5%, risk Urgent, SLA overdue, affected dependency and duplicate cluster" width="100%">
   <br/><sub><b>One finding, everything you need to decide:</b> exploit probability, CISA KEV status, risk and SLA, the affected
-  component, and the duplicates from other scanners merged into it. Screenshots show the built-in demo data.</sub>
+  component, and the duplicates from other scanners merged into it. Screenshots show sample data.</sub>
 </p>
 
 ---
@@ -172,6 +171,9 @@ Yaqiz is installed on **your own Linux server or VM, inside your network**. The 
 | Time | Server clock synchronized (NTP) |
 | Access | `root` or `sudo` on the server |
 
+To prepare the server with your IT team, use the pre-installation checklist in the package:
+`docs/pre-installation-checklist.md`. It lists everything to have ready before the installation day.
+
 ### 1. Prepare the server
 
 Install Docker with the Compose plugin. On Ubuntu or Debian with internet access:
@@ -193,7 +195,7 @@ Run all the following commands in the same terminal. Set the version you are ins
 the [Releases page](https://github.com/0peng/yaqiz-releases/releases/latest)):
 
 ```bash
-VERSION=1.1.2
+VERSION=1.1.3
 ```
 
 **Server with internet access** — download both files directly on the server:
@@ -276,7 +278,7 @@ installation folder** and upgrade. Your settings, certificates, data and backups
 backup first. Read the release notes on the release page first: they list the changes you may notice.
 
 ```bash
-VERSION=1.1.2
+VERSION=1.1.3
 ```
 
 ```bash
