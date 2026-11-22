@@ -23,6 +23,7 @@
   <a href="#what-yaqiz-does"><strong>What it does</strong></a> ·
   <a href="#architecture"><strong>Architecture</strong></a> ·
   <a href="#install-step-by-step"><strong>Install</strong></a> ·
+  <a href="docs/user-guide/README.md"><strong>User guide</strong></a> ·
   <a href="#upgrades-renewals-and-support"><strong>Upgrade</strong></a>
 </p>
 
@@ -300,6 +301,10 @@ minutes.
 
 The complete guide — sizing, TLS, LDAP and single sign-on settings, private CAs, external PostgreSQL, backups and
 troubleshooting — is **`docs/on-prem-installation.md`** inside the package.
+
+**Using Yaqiz day to day?** The **[user guide](docs/user-guide/README.md)** walks through the application with
+screenshots: signing in, organizing assets, importing scanner reports and Excel / Word findings, triaging findings,
+automating with triage rules and tickets, dashboards and reports, and administration.
 
 ---
 
