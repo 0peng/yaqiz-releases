@@ -28,32 +28,32 @@
 
 ---
 
-## What's new in 1.1.3
+## What's new in 1.1.4
 
-A security release. Yaqiz was checked with static code analysis, dependency, secret and container scanners, and
-with targeted attack tests on an installed server. Everything found is fixed.
+A security hardening release following an OWASP Top 10 red-team assessment and an application-security review
+(API fuzzing, the OWASP API Security Top 10 and a dynamic scan). Both assessments passed; the few findings are fixed.
 
-- **Customer-ready packages:** no demo data, no demo accounts, no test files and no fixed passwords. A new
-  installation holds only your administrator, whose password is generated during installation.
-- **Patched, hardened containers:** current base images with operating-system security updates in every build.
-  Every container runs with only the privileges it needs.
-- **Modern HTTPS only:** TLS 1.2 and 1.3 with forward-secret ciphers.
-- **Safer integrations:** webhooks, issue trackers and connectors can no longer reach Yaqiz's own internal services.
-- **Robust against crafted input:** rule regular expressions have a time limit, and crafted Excel files are refused
-  in moments.
-- **Stable lists:** tables, dashboards and reports keep the same order between refreshes and from page to page.
+- **Large scan imports no longer slow the server.** A very large report is processed in the background instead of
+  holding a web connection, so one big import cannot tie up the service. Small imports are unchanged.
+- **No server errors from odd URLs.** A URL ending in `.json` or `.api` now returns a normal "not found" instead of
+  an error.
+- **Stronger transport security headers** are sent on every response, including static files.
+
+This builds on **1.1.3**, which removed all demo data and demo accounts from release packages, rebuilt the
+containers on patched bases, and hardened HTTPS, integrations and input handling.
 
 > [!IMPORTANT]
 > **Upgrading from an earlier version?**
 >
-> - **Demo accounts are locked.** Installations made with `--demo` had demo accounts (alice, bob, carol, ci-bot)
->   that shared one published password. The upgrade switches their passwords off. Remove the demo data under
->   **Settings → System Settings → Demo data**, or set a new password for a demo account you still use.
-> - `install.sh --demo` no longer exists, and `YQ_SEED_DEMO` in `.env` is ignored.
-> - Very old HTTPS clients without modern ciphers can no longer connect. Every current browser is supported.
-> - **The full list** is in the [1.1.3 release notes](https://github.com/0peng/yaqiz-releases/releases/tag/v1.1.3).
->   Coming from an older version, also read the [1.1.2](https://github.com/0peng/yaqiz-releases/releases/tag/v1.1.2)
->   and [1.1.1](https://github.com/0peng/yaqiz-releases/releases/tag/v1.1.1) release notes.
+> - Upgrading from **1.1.2 or earlier**: installations made with the former `--demo` option had demo accounts
+>   (alice, bob, carol, ci-bot) that shared one published password; the upgrade switches their passwords off, and
+>   the `--demo` option and `YQ_SEED_DEMO` no longer exist. Very old HTTPS clients without modern ciphers can no
+>   longer connect (every current browser is supported).
+> - A scan import larger than 8 MB now returns a background job that finishes shortly after, rather than a
+>   synchronous response.
+> - **The full list** is in the [1.1.4 release notes](https://github.com/0peng/yaqiz-releases/releases/tag/v1.1.4).
+>   Coming from an older version, also read the [1.1.3](https://github.com/0peng/yaqiz-releases/releases/tag/v1.1.3)
+>   and [1.1.2](https://github.com/0peng/yaqiz-releases/releases/tag/v1.1.2) release notes.
 >
 > To upgrade, follow [Upgrades](#upgrades-renewals-and-support). Your data and license are kept.
 
@@ -195,7 +195,7 @@ Run all the following commands in the same terminal. Set the version you are ins
 the [Releases page](https://github.com/0peng/yaqiz-releases/releases/latest)):
 
 ```bash
-VERSION=1.1.3
+VERSION=1.1.4
 ```
 
 **Server with internet access** — download both files directly on the server:
@@ -278,7 +278,7 @@ installation folder** and upgrade. Your settings, certificates, data and backups
 backup first. Read the release notes on the release page first: they list the changes you may notice.
 
 ```bash
-VERSION=1.1.3
+VERSION=1.1.4
 ```
 
 ```bash
