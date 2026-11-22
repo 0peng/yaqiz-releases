@@ -19,7 +19,7 @@
 
 <p align="center">
   <a href="https://github.com/0peng/yaqiz-releases/releases/latest"><strong>⬇ Download the latest release</strong></a> ·
-  <a href="#whats-new-in-112"><strong>What's new</strong></a> ·
+  <a href="#whats-new-in-115"><strong>What's new</strong></a> ·
   <a href="#what-yaqiz-does"><strong>What it does</strong></a> ·
   <a href="#architecture"><strong>Architecture</strong></a> ·
   <a href="#install-step-by-step"><strong>Install</strong></a> ·
@@ -28,19 +28,32 @@
 
 ---
 
-## What's new in 1.1.4
+## What's new in 1.1.5
 
-A security hardening release following an OWASP Top 10 red-team assessment and an application-security review
-(API fuzzing, the OWASP API Security Top 10 and a dynamic scan). Both assessments passed; the few findings are fixed.
+A security release that also sets up, checks and watches everything that depends on your environment, so nothing
+fails silently.
 
-- **Large scan imports no longer slow the server.** A very large report is processed in the background instead of
-  holding a web connection, so one big import cannot tie up the service. Small imports are unchanged.
-- **No server errors from odd URLs.** A URL ending in `.json` or `.api` now returns a normal "not found" instead of
-  an error.
-- **Stronger transport security headers** are sent on every response, including static files.
+- **Security fixes** from an independent assessment of 1.1.4: server-side requests can no longer be steered to
+  internal addresses by DNS tricks; single sign-on accounts are bound to the identity provider's subject identifier,
+  so another identity with the same user name cannot reach them; and failed sign-ins lock only the address they come
+  from, so nobody can lock users or administrators out.
+- **Stored credentials are encrypted** (issue-tracker tokens, webhook secrets, connector credentials, Slack/Teams
+  URLs, two-step verification secrets) with a dedicated data key that is kept out of backups, so a copy of the
+  database alone no longer reveals them. Every build now also runs static security analysis.
+- **Settings → System Status** shows whether the installation is configured and healthy (background jobs, database,
+  disk, backups, email, certificate, license, vulnerability feeds, sign-in) and says how to fix anything that needs
+  attention. Administrators see a banner while something does.
+- **Email set up during installation**, with a test email that must arrive: `--smtp-host … --smtp-test you@company.com`.
+  Send a test email from System Status at any time. A rule's email step is no longer shown as "sent" when no mail
+  server is configured.
+- **Nightly backups are scheduled by the installer**, and System Status warns when they stop.
+- **Your own PostgreSQL server** is supported end to end (`--db-host`), including backups and restores.
+- **Import findings from Excel and Word**: the scan type *Generic Findings Import* reads `.xlsx` and `.docx` files
+  (for example manual penetration test reports) as well as CSV and JSON. Excel, Word and CSV templates can be
+  downloaded from the import page.
 
-This builds on **1.1.3**, which removed all demo data and demo accounts from release packages, rebuilt the
-containers on patched bases, and hardened HTTPS, integrations and input handling.
+This builds on **1.1.4** (OWASP Top 10 red-team hardening) and **1.1.3**, which removed all demo data and demo
+accounts from release packages and hardened the containers, HTTPS, integrations and input handling.
 
 > [!IMPORTANT]
 > **Upgrading from an earlier version?**
@@ -49,11 +62,21 @@ containers on patched bases, and hardened HTTPS, integrations and input handling
 >   (alice, bob, carol, ci-bot) that shared one published password; the upgrade switches their passwords off, and
 >   the `--demo` option and `YQ_SEED_DEMO` no longer exist. Very old HTTPS clients without modern ciphers can no
 >   longer connect (every current browser is supported).
-> - A scan import larger than 8 MB now returns a background job that finishes shortly after, rather than a
->   synchronous response.
-> - **The full list** is in the [1.1.4 release notes](https://github.com/0peng/yaqiz-releases/releases/tag/v1.1.4).
->   Coming from an older version, also read the [1.1.3](https://github.com/0peng/yaqiz-releases/releases/tag/v1.1.3)
->   and [1.1.2](https://github.com/0peng/yaqiz-releases/releases/tag/v1.1.2) release notes.
+> - **Keep a copy of `YQ_DATA_KEYS`** from `/opt/yaqiz/.env` in your password vault after upgrading to 1.1.5. The
+>   upgrade adds this key, which encrypts stored credentials. Backups do not contain it, and restoring on another
+>   server needs it.
+> - **Single sign-on with an email domain allow-list**: the identity provider must now send `email_verified`.
+>   Microsoft Entra ID does not: add it as an optional claim, or set `YQ_OIDC_REQUIRE_EMAIL_VERIFIED=false` (see the
+>   1.1.5 release notes).
+> - After upgrading to 1.1.5, open **Settings → System Status**. If it reports no backup schedule, run
+>   `sudo ./deploy/schedule-backups.sh` (an upgrade does not change how backups are scheduled).
+> - An external database configured with a `docker-compose.override.yml`: move its settings to `.env` or re-run
+>   `install.sh --db-host …` so that backups dump that server (see the 1.1.5 release notes).
+> - Upgrading from **1.1.3 or earlier**: a scan import larger than 8 MB returns a background job that finishes
+>   shortly after, rather than a synchronous response.
+> - **The full list** is in the [1.1.5 release notes](https://github.com/0peng/yaqiz-releases/releases/tag/v1.1.5).
+>   Coming from an older version, also read the [1.1.4](https://github.com/0peng/yaqiz-releases/releases/tag/v1.1.4)
+>   and [1.1.3](https://github.com/0peng/yaqiz-releases/releases/tag/v1.1.3) release notes.
 >
 > To upgrade, follow [Upgrades](#upgrades-renewals-and-support). Your data and license are kept.
 
@@ -195,7 +218,7 @@ Run all the following commands in the same terminal. Set the version you are ins
 the [Releases page](https://github.com/0peng/yaqiz-releases/releases/latest)):
 
 ```bash
-VERSION=1.1.4
+VERSION=1.1.5
 ```
 
 **Server with internet access** — download both files directly on the server:
@@ -240,12 +263,15 @@ CA (LDAPS, internal Jira or GitLab, a TLS-inspecting proxy), copy those CA certi
 ### 5. Install with your license
 
 ```bash
-cd /opt/yaqiz && sudo ./deploy/install.sh --host vm.example.com --tls provided --offline yaqiz-$VERSION-images.tar.gz --license ~/your-company.lic
+cd /opt/yaqiz && sudo ./deploy/install.sh --host vm.example.com --tls provided --offline yaqiz-$VERSION-images.tar.gz --license ~/your-company.lic \
+  --admin-email secops@example.com --smtp-host mail.example.com --smtp-user yaqiz --smtp-from yaqiz@example.com --smtp-test secops@example.com
 ```
 
-The installer checks the license file first, generates random secrets, loads the container images, starts the
-platform, waits until it is healthy, installs the license and finally prints the address and the administrator
-password. A first installation takes a few minutes.
+The installer checks every option first, generates random secrets, loads the container images, starts the platform,
+waits until it is healthy, installs the license, schedules the nightly backup, sends the test email and finally prints
+the address, the administrator password and the **system status**: what is configured and what still needs attention.
+It asks for the mail server's password (it is never typed on the command line). A first installation takes a few
+minutes.
 
 | Option | Meaning |
 |---|---|
@@ -254,6 +280,11 @@ password. A first installation takes a few minutes.
 | `--https-port N` / `--http-port N` | Different ports (default 443 / 80) |
 | `--offline FILE` | Load the container images from the package (no internet needed) |
 | `--license FILE` | Install your license as part of the installation |
+| `--admin-email ADDRESS` | Email address of the initial administrator |
+| `--smtp-host NAME` with `--smtp-from`, `--smtp-user`, `--smtp-port`, `--smtp-security` | Your mail server, for notifications and the triage rules' emails |
+| `--smtp-test ADDRESS` | Send a test email; the installation fails if your mail server refuses it |
+| `--db-host NAME` with `--db-name`, `--db-user`, `--db-sslmode` | Your own PostgreSQL 13–16 server instead of the bundled database |
+| `--time-zone NAME`, `--backup-time HH:MM` | Time zone (default: the server's) and the time of the nightly backup (02:30) |
 
 ### 6. Sign in and start using Yaqiz
 
@@ -261,10 +292,11 @@ password. A first installation takes a few minutes.
    `/opt/yaqiz/.env`).
 2. **Profile → Change password**, then **Profile → Two-step verification**.
 3. **Settings → License** shows who the installation is licensed to, the expiry date and the usage.
-4. Connect **LDAP / Active Directory** or **single sign-on**, configure e-mail, and create users, groups and roles.
-5. Connect your scanners (Tenable Nessus, ManageEngine and others) under **Upstream**, upload scanner reports, or send
+4. **Settings → System Status**: fix anything it lists, and send a test email.
+5. Connect **LDAP / Active Directory** or **single sign-on**, and create users, groups and roles.
+6. Connect your scanners (Tenable Nessus, ManageEngine and others) under **Upstream**, upload scanner reports, or send
    results from CI/CD with an API token.
-6. Schedule nightly backups (see [Operations](#operations)).
+7. Copy the nightly backups in `/opt/yaqiz/backups` off the server.
 
 The complete guide — sizing, TLS, LDAP and single sign-on settings, private CAs, external PostgreSQL, backups and
 troubleshooting — is **`docs/on-prem-installation.md`** inside the package.
@@ -278,7 +310,7 @@ installation folder** and upgrade. Your settings, certificates, data and backups
 backup first. Read the release notes on the release page first: they list the changes you may notice.
 
 ```bash
-VERSION=1.1.4
+VERSION=1.1.5
 ```
 
 ```bash
@@ -314,9 +346,10 @@ Run these in `/opt/yaqiz`:
 
 | Task | Command |
 |---|---|
-| Status, health and recent errors | `sudo ./deploy/status.sh` |
-| Backup (database, files, settings, certificates) | `sudo ./deploy/backup.sh --keep 14` — schedule it nightly and copy `backups/` off the server |
-| Restore a backup | `sudo ./deploy/restore.sh backups/<timestamp>` |
+| Status, configuration check and recent errors | `sudo ./deploy/status.sh` (the same as **Settings → System Status**) |
+| Backup (database, files, settings, certificates) | Nightly by default; now: `sudo ./deploy/backup.sh --keep 14`. Copy `backups/` off the server |
+| Change or stop the nightly backup | `sudo ./deploy/schedule-backups.sh --time 01:00 --keep 30` / `--remove` |
+| Restore a backup | `sudo ./deploy/restore.sh backups/<timestamp>` (on another server, copy `YQ_DATA_KEYS` into its `.env` first) |
 | License status / install a renewal | `sudo ./deploy/license.sh` / `sudo ./deploy/license.sh renewal.lic` (or **Settings → License**) |
 | Support bundle for your vendor (passwords and secrets removed) | `sudo ./deploy/support-bundle.sh` |
 | Logs | `sudo docker compose logs -f api worker` |
