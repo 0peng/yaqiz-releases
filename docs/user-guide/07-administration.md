@@ -93,10 +93,11 @@ history attributable.
 **Create group**. On the group's page, choose a **User** and a **Role in group** and click **Add member**.
 
 **Service users and API tokens.** A service user (checkbox **Service user**) is meant for CI/CD. It cannot sign in to
-the web interface and does not need two-step verification. Create it with a password and give it the **API_Importer**
-role on the organizations it imports into. The pipeline gets its token from `POST /api/v2/api-token-auth/` with the
-user name and password, and sends it as `Authorization: Token <token>`. People find their own token in the user menu
-under **API token**, where they can **Reveal**, copy or **Rotate** it. Rotating stops the old token at once.
+the web interface and does not need two-step verification. Give it the **API_Importer** role on the organizations it
+imports into. To give a pipeline its token, open the service user under **Settings › Users** and click **Generate API
+token**: the token is shown once, so copy it into the CI system's secrets; generating a new one replaces the old one at
+once, and both actions are written to the audit log. The pipeline sends it as `Authorization: Token <token>`. People
+find their own token in the user menu under **API token**, where they can **Reveal**, copy or **Rotate** it.
 
 ## Sign-in methods
 
@@ -138,7 +139,7 @@ values, then click **Save settings**, or **Discard**. All sections need **Edit s
 ## Feature Flags
 
 **Settings › Feature Flags** turns optional modules on or off for every user at once. Only superusers can change
-them. In 1.1.5 these flags have a visible effect:
+them. In 1.1.6 these flags have a visible effect:
 
 * **Locations**, **Upstream Connectors**, **Triage Engine** and **Root Cause Correlation** show or hide the menu entries
   **Inventory › Locations**, **Connect › Upstream**, **Act › Triage Engine** and **Act › Root Causes**.

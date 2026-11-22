@@ -4,7 +4,7 @@ A walkthrough of Yaqiz for the people who use it every day: security analysts, a
 administrators. It follows the path a finding takes, from the scanner report to the fix, and shows each screen you
 use along the way.
 
-Written for **Yaqiz 1.1.5**. Installing, upgrading and operating the server (TLS, directory sign-in, single sign-on,
+Written for **Yaqiz 1.1.6**. Installing, upgrading and operating the server (TLS, directory sign-in, single sign-on,
 email, backups) is covered by the installation guide, `docs/on-prem-installation.md` in the release package, and
 summarized in the [main README](../../README.md).
 
@@ -16,7 +16,7 @@ summarized in the [main README](../../README.md).
   Scanners and reports            Yaqiz                                             Your teams
  ──────────────────────  ┌──────────────────────────────────────────────────┐  ─────────────────────
   Nessus, ZAP, Trivy,  ──▶  Import      deduplicate, enrich (EPSS, KEV),   ──▶  My Work, findings lists
-  Semgrep, … 46 types     │  Connectors  prioritize by business context,   │    Jira and other trackers
+  Semgrep, … 97 types     │  Connectors  prioritize by business context,   │    Jira and other trackers
   Excel / Word / CSV   ──▶  CI/CD API   set SLA due dates                   ──▶  email, Slack, Teams
   pentest reports         │             Triage Engine rules act on them     │    dashboards and reports
                           └──────────────────────────────────────────────────┘

@@ -183,7 +183,7 @@ webhook URLs contain credentials.
 
 Common reasons for **Failed**:
 
-* **Email is not configured**: the response body starts with "Email is not configured, so nothing was sent". In 1.1.5
+* **Email is not configured**: the response body starts with "Email is not configured, so nothing was sent". Since 1.1.5
   Yaqiz records such an email as not delivered instead of reporting it as sent. Ask an administrator to set up the mail
   server and send a test email under **Settings › System Status** (see
   [chapter 7](07-administration.md#system-status)). The **Send an Email** node shows the same warning under
@@ -241,21 +241,29 @@ and downstream connectors** (`config.connectors`) permission.
 4. On **Mappings**, click **Add mapping**. Choose the **Issue tracker** and, under **Applies to**, either **One
    asset** or **Every asset of an organization**. An asset mapping takes precedence over its organization's mapping.
 5. Enter the **Project** (for Jira, the project key such as `SEC`), the **Issue type**, an optional **Component** and
-   **Labels**, and the **Minimum severity**. Lower severities are never pushed. Click **Add mapping**.
+   **Labels**, and the **Minimum severity**. Lower severities are never pushed.
+6. Choose the **Push mode** and the options below, then click **Add mapping**.
 
-In 1.1.5, tickets are created in these ways:
-
-* **Push to issue tracker** in a finding's action menu, or the bulk action of the same name in the findings list.
-* A Triage Engine rule with a **Create a Ticket** node, as in the [example rule](#build-your-first-rule).
+| Setting | What happens |
+|---|---|
+| **Push mode: Manual** | Tickets only from **Push to issue tracker** in a finding's action menu (or the bulk action of the same name), from an import with the push option, or from a rule's **Create a Ticket** node, as in the [example rule](#build-your-first-rule). |
+| **Push mode: Automatically for new findings** | Also every new finding of an import or connector sync at or above the minimum severity. |
+| **Push mode: Automatically for all matching findings** | Also every open finding already in scope: when you save the mapping, then every 30 minutes, at most 200 tickets per run. |
+| **Push finding notes as comments** | Public notes on the finding are added to its ticket. Private notes are not. |
+| **Close tickets when findings are mitigated** | Closing a finding, or marking it false positive or out of scope, closes its ticket; reopening the finding reopens it. This follows every change: the finding page, bulk actions, rules and re-imports. |
+| **One ticket per finding group** | The findings of a [finding group](04-working-with-findings.md#finding-groups) share one ticket, which closes when every finding of the group is closed. |
 
 A ticket contains the finding title, severity, risk, priority, asset, vulnerability IDs, CWE, location, description,
 mitigation and a link back to Yaqiz. Jira issues also get the label `yaqiz`. The ServiceNow and Linear types send the
-same JSON as **Generic webhook** to the URL that you enter.
+same JSON events as **Generic webhook** (`ticket.create`, `ticket.close`, `ticket.reopen`, `ticket.comment`) to the
+URL that you enter.
 
 **What syncs back.** Yaqiz stores the ticket key and link. They appear in the finding's **Tickets** card and on the
-**Tickets** tab, with **Status**, **Last synced** and **Sync error**. When you close a finding or mark it as a false
-positive in Yaqiz, Yaqiz closes its ticket if the mapping has **Close tickets when findings are mitigated** on. When you
-reopen the finding, Yaqiz reopens the ticket. The **Status** column shows the state that Yaqiz last set.
+**Tickets** tab, with **Status**, **Last synced** and **Sync error**. Every 30 minutes Yaqiz reads each ticket's status
+from the tracker and shows it under **Status**; this is information only, a ticket closed in the tracker does not close
+the finding. Webhook-type trackers cannot be asked and keep the status Yaqiz last set. When the tracker refuses a
+change, for example a Jira workflow without the transition named in the tracker's options (`close_transition`,
+default "Done"), **Sync error** says why and the ticket stays as it was.
 
 ![Downstream integrations, Mappings tab](images/05-downstream-mappings.png)
 

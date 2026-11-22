@@ -19,7 +19,7 @@
 
 <p align="center">
   <a href="https://github.com/0peng/yaqiz-releases/releases/latest"><strong>⬇ Download the latest release</strong></a> ·
-  <a href="#whats-new-in-115"><strong>What's new</strong></a> ·
+  <a href="#whats-new-in-116"><strong>What's new</strong></a> ·
   <a href="#what-yaqiz-does"><strong>What it does</strong></a> ·
   <a href="#architecture"><strong>Architecture</strong></a> ·
   <a href="#install-step-by-step"><strong>Install</strong></a> ·
@@ -29,32 +29,27 @@
 
 ---
 
-## What's new in 1.1.5
+## What's new in 1.1.6
 
-A security release that also sets up, checks and watches everything that depends on your environment, so nothing
-fails silently.
+More than twice as many scanners, connectors that work for every tool they list, and issue-tracker settings that do
+what they say.
 
-- **Security fixes** from an independent assessment of 1.1.4: server-side requests can no longer be steered to
-  internal addresses by DNS tricks; single sign-on accounts are bound to the identity provider's subject identifier,
-  so another identity with the same user name cannot reach them; and failed sign-ins lock only the address they come
-  from, so nobody can lock users or administrators out.
-- **Stored credentials are encrypted** (issue-tracker tokens, webhook secrets, connector credentials, Slack/Teams
-  URLs, two-step verification secrets) with a dedicated data key that is kept out of backups, so a copy of the
-  database alone no longer reveals them. Every build now also runs static security analysis.
-- **Settings → System Status** shows whether the installation is configured and healthy (background jobs, database,
-  disk, backups, email, certificate, license, vulnerability feeds, sign-in) and says how to fix anything that needs
-  attention. Administrators see a banner while something does.
-- **Email set up during installation**, with a test email that must arrive: `--smtp-host … --smtp-test you@company.com`.
-  Send a test email from System Status at any time. A rule's email step is no longer shown as "sent" when no mail
-  server is configured.
-- **Nightly backups are scheduled by the installer**, and System Status warns when they stop.
-- **Your own PostgreSQL server** is supported end to end (`--db-host`), including backups and restores.
-- **Import findings from Excel and Word**: the scan type *Generic Findings Import* reads `.xlsx` and `.docx` files
-  (for example manual penetration test reports) as well as CSV and JSON. Excel, Word and CSV templates can be
-  downloaded from the import page.
+- **97 scanner formats (51 new)**: Checkmarx and Checkmarx One, Fortify SCA (`.fpr`) and WebInspect, Veracode,
+  Black Duck, JFrog Xray, Sonatype Nexus IQ, Mend, Rapid7 InsightVM, Microsoft Defender for Endpoint, CrowdStrike
+  Spotlight, Invicti / Netsparker, HCL AppScan, Amazon Inspector, Google Cloud SCC, Prisma Cloud / Twistlock, Aqua,
+  Wazuh, OpenSCAP, testssl.sh, MobSF, HackerOne, Bugcrowd and more. CI/CD jobs that use DefectDojo scan type names
+  keep working. The full list is in the [user guide](docs/user-guide/03-bringing-in-findings.md#supported-scanners).
+- **GitHub Advanced Security, Dependency-Track, Snyk and Semgrep connectors work** (every sync failed in 1.1.5), and
+  a connector that cannot reach part of a tool no longer closes the findings of earlier syncs.
+- **Issue trackers**: new findings get tickets automatically when the mapping says so, public notes become ticket
+  comments, a finding group can share one ticket, tickets close and reopen with every status change (including
+  re-imports, bulk changes and rules), and each ticket's status in the tracker is shown in Yaqiz.
+- **CI/CD service users**: an administrator creates the API token on the user's page (**Generate API token**).
+- **Re-imports** no longer re-create findings whose URL was written with a default port or upper-case host name.
 
-This builds on **1.1.4** (OWASP Top 10 red-team hardening) and **1.1.3**, which removed all demo data and demo
-accounts from release packages and hardened the containers, HTTPS, integrations and input handling.
+This builds on **1.1.5** (security fixes from an independent assessment, Settings → System Status, email, backups and
+external PostgreSQL set up by the installer, encrypted stored credentials, Excel and Word findings import) and
+**1.1.4** and **1.1.3** (hardening; no demo data or demo accounts in release packages).
 
 > [!IMPORTANT]
 > **Upgrading from an earlier version?**
@@ -63,21 +58,26 @@ accounts from release packages and hardened the containers, HTTPS, integrations 
 >   (alice, bob, carol, ci-bot) that shared one published password; the upgrade switches their passwords off, and
 >   the `--demo` option and `YQ_SEED_DEMO` no longer exist. Very old HTTPS clients without modern ciphers can no
 >   longer connect (every current browser is supported).
-> - **Keep a copy of `YQ_DATA_KEYS`** from `/opt/yaqiz/.env` in your password vault after upgrading to 1.1.5. The
->   upgrade adds this key, which encrypts stored credentials. Backups do not contain it, and restoring on another
->   server needs it.
-> - **Single sign-on with an email domain allow-list**: the identity provider must now send `email_verified`.
->   Microsoft Entra ID does not: add it as an optional claim, or set `YQ_OIDC_REQUIRE_EMAIL_VERIFIED=false` (see the
->   1.1.5 release notes).
-> - After upgrading to 1.1.5, open **Settings → System Status**. If it reports no backup schedule, run
->   `sudo ./deploy/schedule-backups.sh` (an upgrade does not change how backups are scheduled).
+> - **Issue-tracker mappings set to an automatic push mode** start creating tickets after the upgrade to 1.1.6 (with
+>   *all matching findings*: within 30 minutes, at most 200 per mapping and run). Switch a mapping to **Manual**
+>   first if that is not wanted yet. Jira tickets are closed with the transition named in the tracker's options
+>   (`close_transition`, default "Done"); a workflow without it shows a **Sync error** on the ticket.
+> - Upgrading from **1.1.4 or earlier**:
+>   - **Keep a copy of `YQ_DATA_KEYS`** from `/opt/yaqiz/.env` in your password vault. The upgrade adds this key,
+>     which encrypts stored credentials. Backups do not contain it, and restoring on another server needs it.
+>   - **Single sign-on with an email domain allow-list**: the identity provider must send `email_verified`.
+>     Microsoft Entra ID does not: add it as an optional claim, or set `YQ_OIDC_REQUIRE_EMAIL_VERIFIED=false` (see
+>     the 1.1.5 release notes).
+>   - After the upgrade, open **Settings → System Status**. If it reports no backup schedule, run
+>     `sudo ./deploy/schedule-backups.sh` (an upgrade does not change how backups are scheduled).
 > - An external database configured with a `docker-compose.override.yml`: move its settings to `.env` or re-run
 >   `install.sh --db-host …` so that backups dump that server (see the 1.1.5 release notes).
 > - Upgrading from **1.1.3 or earlier**: a scan import larger than 8 MB returns a background job that finishes
 >   shortly after, rather than a synchronous response.
-> - **The full list** is in the [1.1.5 release notes](https://github.com/0peng/yaqiz-releases/releases/tag/v1.1.5).
->   Coming from an older version, also read the [1.1.4](https://github.com/0peng/yaqiz-releases/releases/tag/v1.1.4)
->   and [1.1.3](https://github.com/0peng/yaqiz-releases/releases/tag/v1.1.3) release notes.
+> - **The full list** is in the [1.1.6 release notes](https://github.com/0peng/yaqiz-releases/releases/tag/v1.1.6).
+>   Coming from an older version, also read the [1.1.5](https://github.com/0peng/yaqiz-releases/releases/tag/v1.1.5),
+>   [1.1.4](https://github.com/0peng/yaqiz-releases/releases/tag/v1.1.4) and
+>   [1.1.3](https://github.com/0peng/yaqiz-releases/releases/tag/v1.1.3) release notes.
 >
 > To upgrade, follow [Upgrades](#upgrades-renewals-and-support). Your data and license are kept.
 
@@ -219,7 +219,7 @@ Run all the following commands in the same terminal. Set the version you are ins
 the [Releases page](https://github.com/0peng/yaqiz-releases/releases/latest)):
 
 ```bash
-VERSION=1.1.5
+VERSION=1.1.6
 ```
 
 **Server with internet access** — download both files directly on the server:
@@ -315,7 +315,7 @@ installation folder** and upgrade. Your settings, certificates, data and backups
 backup first. Read the release notes on the release page first: they list the changes you may notice.
 
 ```bash
-VERSION=1.1.5
+VERSION=1.1.6
 ```
 
 ```bash

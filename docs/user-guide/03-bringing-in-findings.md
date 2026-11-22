@@ -64,23 +64,26 @@ with the reason). Upload size limits are set on the server; see the installation
 
 ## Supported scanners
 
-Yaqiz reads 46 report formats out of the box. For the full list, open the **Scan type** picker on **Add Findings**:
+Yaqiz reads 97 report formats out of the box. For the full list, open the **Scan type** picker on **Add Findings**:
 the search box shows how many scan types exist, and each entry lists its file types and alternative names ("Also:
 …"). Every scan type name is also listed under **Settings › Data Model › Test Types**.
 
 | Category | Tools |
 |---|---|
-| Infrastructure | Tenable Nessus, Tenable.io and Tenable.sc, Qualys VM/VMDR, Greenbone/OpenVAS, Nmap, ManageEngine Vulnerability Manager Plus / Endpoint Central, kube-bench |
-| DAST | Burp Suite, OWASP ZAP, Acunetix, Nuclei, Nikto, Qualys WAS |
-| SAST | SARIF (any tool), Semgrep, SonarQube/SonarCloud, GitHub code scanning (CodeQL), Bandit, Brakeman, gosec, ESLint |
-| SCA | Snyk, OWASP Dependency-Check, Dependency-Track, CycloneDX (BOM or VEX), npm audit, pip-audit, OSV-Scanner, Retire.js, GitHub Dependabot |
-| Container | Trivy, Grype, Anchore Engine/Enterprise, Clair, Docker Scout |
-| IaC | Checkov, KICS, tfsec, Kubescape, Hadolint |
-| Cloud | AWS Security Hub (ASFF), Microsoft Defender for Cloud, Prowler, Wiz |
-| Secrets | Gitleaks, TruffleHog |
+| Infrastructure | Tenable Nessus, Tenable.io and Tenable.sc, Qualys VM/VMDR, Rapid7 InsightVM / Nexpose, Microsoft Defender for Endpoint, CrowdStrike Falcon Spotlight, Greenbone/OpenVAS, ManageEngine Vulnerability Manager Plus / Endpoint Central, Wazuh, OpenSCAP, Lynis, Nmap, kube-bench |
+| TLS | testssl.sh, SSLyze, SSL Labs |
+| DAST and APIs | Burp Suite, OWASP ZAP, Acunetix, Invicti / Netsparker / Acunetix 360, HCL AppScan, Fortify WebInspect, Rapid7 AppSpider, Qualys WAS, Nuclei, Nikto, Wapiti, WPScan, StackHawk |
+| SAST | SARIF (any tool), Checkmarx, Checkmarx One, Fortify SCA (`.fpr`, `.fvdl`), Veracode, Semgrep, SonarQube/SonarCloud, GitHub code scanning (CodeQL), SpotBugs / Find Security Bugs, Bandit, Brakeman, gosec, ESLint, Horusec, njsscan, Bearer, Cppcheck, Kiuwan |
+| SCA | Snyk, Black Duck, JFrog Xray, Sonatype Nexus IQ, Mend, OWASP Dependency-Check, Dependency-Track, CycloneDX (BOM or VEX), npm audit, yarn audit, pip-audit, Safety, bundler-audit, cargo-audit, govulncheck, Composer audit, OSV-Scanner, Retire.js, GitHub Dependabot |
+| Container | Trivy, Grype, Anchore Engine/Enterprise, Aqua, Prisma Cloud Compute / Twistlock, Harbor, Sysdig, Clair, Docker Scout |
+| IaC | Checkov, KICS, tfsec, Terrascan, Kubescape, kubeaudit, Hadolint |
+| Cloud | AWS Security Hub (ASFF), Amazon Inspector, Microsoft Defender for Cloud, Google Cloud Security Command Center, Prowler, ScoutSuite, Wiz |
+| Secrets | Gitleaks, TruffleHog, detect-secrets, GitGuardian ggshield, Talisman (secrets are stored masked) |
+| Mobile | MobSF and mobsfscan |
+| Bug bounty | HackerOne, Bugcrowd |
 | Other | Generic Findings Import |
 
-Most formats accept several names (for example "Nessus Scan" for "Tenable Scan"). For a format that is not listed,
+Fortify `.fpr` and Black Duck report `.zip` files are uploaded as they are. Most formats accept several names (for example "Nessus Scan" for "Tenable Scan"). For a format that is not listed,
 use the Generic Findings Import or a Universal Parser.
 
 ## Generic Findings Import (CSV, Excel, Word, JSON)
@@ -199,13 +202,10 @@ permission "Manage upstream and downstream connectors".
 |---|---|
 | Tenable Nessus | Latest results of each scan, from Nessus Professional / Manager or Tenable Vulnerability Management (scan) |
 | ManageEngine Vulnerability Manager Plus | Open vulnerabilities of managed computers, also from Endpoint Central build 11.3.2430.01 or later (computer, or the whole server) |
+| GitHub Advanced Security | Open code scanning and Dependabot alerts of an organization's repositories, imported as two tests (repository) |
 | SonarQube | Issues and security hotspots of each project (project) |
+| Dependency-Track, Snyk, Semgrep | The project's open findings, under the same scan types as the tools' report files (project) |
 | Generic JSON Feed | Any HTTP endpoint returning the generic JSON format (feed) |
-
-> **Known issue in 1.1.5:** the list of available connectors also shows **GitHub Advanced Security**,
-> **Dependency-Track**, **Snyk** and **Semgrep**. Their sync fails in 1.1.5 ("Unknown scan type"). Until a fix is
-> released, export the report from those tools and import it under **Add Findings** (scan types **SARIF**,
-> **Dependency Track Finding Packaging Format (FPF) Export**, **Snyk Scan** and **Semgrep JSON Report**).
 
 **Add a connector**
 
@@ -239,9 +239,11 @@ internal CA trusted (see the installation guide).
 
 Pipelines import through the REST API with the same options as the Add Findings page.
 
-1. **Get a token.** In the user menu at the top right, choose **API token**. Use **Reveal** and the copy button. The
-   token carries all of your permissions, so treat it like a password; **Rotate** replaces it and stops the old one at
-   once. For pipelines, ask your administrator for a service account with the API_Importer role.
+1. **Get a token.** For a pipeline, ask your administrator for a service user with the API_Importer role: the
+   administrator clicks **Generate API token** on that user's page and gives you the token (it is shown once). For
+   your own scripts, choose **API token** in the user menu at the top right and use **Reveal** and the copy button. A
+   token carries all of its user's permissions, so treat it like a password; **Rotate** (or generating a new service
+   user token) replaces it and stops the old one at once.
 2. **Store it** in your CI system as a secret, for example `YAQIZ_API_TOKEN`.
 3. **Build the command.** On **Add Findings**, choose the scan type, destination and options; the **Automate from
    CI/CD** card shows the matching `curl` command to copy into your pipeline.
