@@ -4,7 +4,7 @@ A walkthrough of Yaqiz for the people who use it every day: security analysts, a
 administrators. It follows the path a finding takes, from the scanner report to the fix, and shows each screen you
 use along the way.
 
-Written for **Yaqiz 1.1.6**. Installing, upgrading and operating the server (TLS, directory sign-in, single sign-on,
+Written for **Yaqiz 1.1.7**. Installing, upgrading and operating the server (TLS, directory sign-in, single sign-on,
 email, backups) is covered by the installation guide, `docs/on-prem-installation.md` in the release package, and
 summarized in the [main README](../../README.md).
 

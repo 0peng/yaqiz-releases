@@ -49,8 +49,9 @@ If sign-in fails, the message tells you why:
   administrator.
 * **Service users cannot log in interactively.** Service accounts are for scripts and CI/CD only.
 
-To sign out, click your initials in the top-right corner and choose **Sign out**. Your session also ends on its own
-after a time your administrator sets; you then sign in again.
+To sign out, click your initials in the top-right corner and choose **Sign out**. The sign-in page opens and every
+other Yaqiz tab of the same browser follows, so nothing stays on screen on a shared computer. Your session also ends
+on its own after a time your administrator sets; you then sign in again.
 
 ## Change your password
 

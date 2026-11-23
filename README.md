@@ -19,7 +19,7 @@
 
 <p align="center">
   <a href="https://github.com/0peng/yaqiz-releases/releases/latest"><strong>⬇ Download the latest release</strong></a> ·
-  <a href="#whats-new-in-116"><strong>What's new</strong></a> ·
+  <a href="#whats-new-in-117"><strong>What's new</strong></a> ·
   <a href="#what-yaqiz-does"><strong>What it does</strong></a> ·
   <a href="#architecture"><strong>Architecture</strong></a> ·
   <a href="#install-step-by-step"><strong>Install</strong></a> ·
@@ -29,36 +29,36 @@
 
 ---
 
-## What's new in 1.1.6
+## What's new in 1.1.7
 
-More than twice as many scanners, connectors that work for every tool they list, and issue-tracker settings that do
-what they say.
+Signing out clears the screen in every tab, change plans can delete assets, and Qualys reports can be imported as CSV.
 
-- **97 scanner formats (51 new)**: Checkmarx and Checkmarx One, Fortify SCA (`.fpr`) and WebInspect, Veracode,
-  Black Duck, JFrog Xray, Sonatype Nexus IQ, Mend, Rapid7 InsightVM, Microsoft Defender for Endpoint, CrowdStrike
-  Spotlight, Invicti / Netsparker, HCL AppScan, Amazon Inspector, Google Cloud SCC, Prisma Cloud / Twistlock, Aqua,
-  Wazuh, OpenSCAP, testssl.sh, MobSF, HackerOne, Bugcrowd and more. CI/CD jobs that use DefectDojo scan type names
-  keep working. The full list is in the [user guide](docs/user-guide/03-bringing-in-findings.md#supported-scanners).
-- **GitHub Advanced Security, Dependency-Track, Snyk and Semgrep connectors work** (every sync failed in 1.1.5), and
-  a connector that cannot reach part of a tool no longer closes the findings of earlier syncs.
-- **Issue trackers**: new findings get tickets automatically when the mapping says so, public notes become ticket
-  comments, a finding group can share one ticket, tickets close and reopen with every status change (including
-  re-imports, bulk changes and rules), and each ticket's status in the tracker is shown in Yaqiz.
-- **CI/CD service users**: an administrator creates the API token on the user's page (**Generate API token**).
-- **Re-imports** no longer re-create findings whose URL was written with a default port or upper-case host name.
+- **Signing out (security fix)**: the page goes to the sign-in page at once and everything that was loaded is
+  removed from the browser; other open tabs of the same browser follow, and the Back button no longer shows the
+  previous page. Before, the page that was open could stay on screen after signing out (no data could be loaded any
+  more, but what was shown stayed visible), which matters on a shared computer.
+- **Change plans delete assets**: a `delete` column in the spreadsheet, **Delete…** on **Assets › All** for the
+  assets you tick, and **Undo** of a plan now deletes the assets that plan created. The review lists every asset to
+  delete with its engagements, tests and findings before anything happens; deleting needs the Owner role on the
+  asset. See the [user guide](docs/user-guide/02-inventory.md#change-plans-bulk-changes-from-a-spreadsheet).
+- **Qualys CSV**: **Qualys Scan** accepts the scan results CSV and the CSV of Scan-based or Host-based vulnerability
+  reports, as well as XML. Severities 1–5 are read as Qualys levels (5 = Critical).
 
-This builds on **1.1.5** (security fixes from an independent assessment, Settings → System Status, email, backups and
-external PostgreSQL set up by the installer, encrypted stored credentials, Excel and Word findings import) and
-**1.1.4** and **1.1.3** (hardening; no demo data or demo accounts in release packages).
+This builds on **1.1.6** (97 scanner formats, working connectors, issue-tracker mappings that do what they say),
+**1.1.5** (security fixes from an independent assessment, Settings → System Status, email, backups and external
+PostgreSQL set up by the installer, encrypted stored credentials, Excel and Word findings import) and **1.1.4** and
+**1.1.3** (hardening; no demo data or demo accounts in release packages).
 
 > [!IMPORTANT]
 > **Upgrading from an earlier version?**
 >
+> - **1.1.7** needs no configuration change. Browser tabs left open during the upgrade keep the previous version of
+>   the app until they are reloaded: reload Yaqiz after upgrading (sessions are kept; nobody has to sign in again).
 > - Upgrading from **1.1.2 or earlier**: installations made with the former `--demo` option had demo accounts
 >   (alice, bob, carol, ci-bot) that shared one published password; the upgrade switches their passwords off, and
 >   the `--demo` option and `YQ_SEED_DEMO` no longer exist. Very old HTTPS clients without modern ciphers can no
 >   longer connect (every current browser is supported).
-> - **Issue-tracker mappings set to an automatic push mode** start creating tickets after the upgrade to 1.1.6 (with
+> - Upgrading from **1.1.5 or earlier**: **issue-tracker mappings set to an automatic push mode** start creating tickets after the upgrade (with
 >   *all matching findings*: within 30 minutes, at most 200 per mapping and run). Switch a mapping to **Manual**
 >   first if that is not wanted yet. Jira tickets are closed with the transition named in the tracker's options
 >   (`close_transition`, default "Done"); a workflow without it shows a **Sync error** on the ticket.
@@ -74,8 +74,9 @@ external PostgreSQL set up by the installer, encrypted stored credentials, Excel
 >   `install.sh --db-host …` so that backups dump that server (see the 1.1.5 release notes).
 > - Upgrading from **1.1.3 or earlier**: a scan import larger than 8 MB returns a background job that finishes
 >   shortly after, rather than a synchronous response.
-> - **The full list** is in the [1.1.6 release notes](https://github.com/0peng/yaqiz-releases/releases/tag/v1.1.6).
->   Coming from an older version, also read the [1.1.5](https://github.com/0peng/yaqiz-releases/releases/tag/v1.1.5),
+> - **The full list** is in the [1.1.7 release notes](https://github.com/0peng/yaqiz-releases/releases/tag/v1.1.7).
+>   Coming from an older version, also read the [1.1.6](https://github.com/0peng/yaqiz-releases/releases/tag/v1.1.6),
+>   [1.1.5](https://github.com/0peng/yaqiz-releases/releases/tag/v1.1.5),
 >   [1.1.4](https://github.com/0peng/yaqiz-releases/releases/tag/v1.1.4) and
 >   [1.1.3](https://github.com/0peng/yaqiz-releases/releases/tag/v1.1.3) release notes.
 >
@@ -219,7 +220,7 @@ Run all the following commands in the same terminal. Set the version you are ins
 the [Releases page](https://github.com/0peng/yaqiz-releases/releases/latest)):
 
 ```bash
-VERSION=1.1.6
+VERSION=1.1.7
 ```
 
 **Server with internet access** — download both files directly on the server:
@@ -315,7 +316,7 @@ installation folder** and upgrade. Your settings, certificates, data and backups
 backup first. Read the release notes on the release page first: they list the changes you may notice.
 
 ```bash
-VERSION=1.1.6
+VERSION=1.1.7
 ```
 
 ```bash

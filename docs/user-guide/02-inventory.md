@@ -124,7 +124,7 @@ which needs `asset.edit` on the parent) or with a change plan.
 
 ## Change plans: bulk changes from a spreadsheet
 
-**Inventory › Assets › Change Plans** creates, moves and updates many assets at once from a CSV or Excel file.
+**Inventory › Assets › Change Plans** creates, moves, updates and deletes many assets at once from a CSV or Excel file.
 Nothing is written when you upload: Yaqiz first shows every effect for review, and an applied plan can be undone. You
 can create plans if you may edit, configure or add assets somewhere, or create organizations; every row is still
 checked against your permissions on its own asset. The list shows the plans you created or applied (superusers and
@@ -135,24 +135,29 @@ global Owners see all of them).
 2. Edit the file in Excel. Keep only the rows you change. The columns are `asset_id`, `asset_name`, `organization`,
    `parent_id`, `parent_name`, `asset_type`, `business_criticality`, `user_records`, `revenue`, `external_audience`,
    `internet_accessible`, `prioritization_engine`, `sla_configuration`, `lifecycle`, `technical_contact`,
-   `team_manager`, `asset_manager`, `tags_add` and `tags_remove`. Each row needs `asset_id` or `asset_name`; other
-   columns are optional.
+   `team_manager`, `asset_manager`, `tags_add`, `tags_remove` and `delete`. Each row needs `asset_id` or `asset_name`;
+   other columns are optional.
    * An empty cell changes nothing; `null` clears a value (`null` in `parent_id` or `parent_name` makes the asset
      top-level).
    * Contacts are usernames, engines and SLA configurations are names, tags are comma-separated, yes/no columns take
      `true` or `false`.
    * Changing `organization` moves the asset and its children. A row without `asset_id` whose `asset_name` does not
      exist yet, with an `organization`, becomes a new asset (when **Create assets that don't exist yet** is on).
+   * `yes` in `delete` deletes the row's asset with its engagements, tests and findings (the row's other cells are
+     ignored; its child assets become top-level). Leave it empty, or write `no`, to keep the asset. Deleting needs
+     the Owner role on the asset.
 3. Click **Import CSV / Excel**, choose the **File** (CSV or `.xlsx`, first sheet, up to 10 MB and 10,000 rows) and,
    optionally, a **Plan name**. Leave **Create assets that don't exist yet** on; switch on **Create organizations that
    don't exist yet** only if unknown organization names should become new organizations. Click **Create plan for
    review**.
 4. Review the plan. The tiles count **Operations**, **With changes**, **Assets created**, **Assets moved**,
-   **Parents changed**, **Fields changed**, **Organizations created** and **Errors**; the cards below list each
-   change. Watch **Parent links removed** (a parent and child must stay in one organization) and **Recalculation**
+   **Parents changed**, **Fields changed**, **Organizations created**, **Assets deleted** (when the plan deletes)
+   and **Errors**; the cards below list each change. **Assets deleted** shows, for each asset, how many engagements,
+   tests and findings go with it and which child assets become top-level; a red banner repeats the totals. Watch **Parent links removed** (a parent and child must stay in one organization) and **Recalculation**
    (findings that will be rescored). **Export as CSV** downloads the review.
 5. If there are **Errors**, fix the file and import it again: a plan with errors cannot run. Otherwise click **Run
-   plan** and confirm. The status changes to **Applying** and then **Applied**.
+   plan** and confirm (**Run plan and delete** when the plan deletes assets). The status changes to **Applying** and
+   then **Applied**. Deleted assets cannot be restored, not even by Undo.
 
 For example, this file moves the existing asset 42 under **Web shop** and creates a new asset in **Retail**:
 
@@ -164,10 +169,14 @@ asset_id,asset_name,organization,parent_name,business_criticality,internet_acces
 
 ![Draft change plan under review with summary tiles and the Assets moved card](images/02-change-plan-review.png)
 
-* **Stale** means the hierarchy changed after your review, so the plan did not run. Click **Re-run dry run** to
+* **Stale** means the hierarchy changed after your review (for example, findings were imported into an asset the
+  plan deletes), so the plan did not run. Click **Re-run dry run** to
   review the current state in a new plan. **Discard** abandons a draft; **Review again** rebuilds a **Failed** plan.
-* **Undo** on an applied plan creates a draft that reverses every change; review and run it. Organizations and assets
-  the original plan created are kept.
+* **Undo** on an applied plan creates a draft that reverses every change and deletes the assets the plan created,
+  with everything recorded under them since; review it and run it. Organizations the plan created are kept, and assets
+  deleted in the meantime are left out.
+* To delete assets without a spreadsheet, tick them on **Inventory › Assets › All** and click **Delete…**: a change
+  plan opens for review.
 
 ## Engagements
 
