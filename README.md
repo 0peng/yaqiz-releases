@@ -50,10 +50,6 @@ CISO Assistant joins the connectors and the DefectDojo connector is removed. The
   one domain. Items closed in CISO Assistant are closed in Yaqiz at the next sync. The same JSON can be uploaded under
   **Connect → Import → Add Findings** (scan type **CISO Assistant**): Yaqiz now imports 98 report formats and offers
   26 upstream connectors.
-- **DefectDojo connector removed**: the upgrade switches existing DefectDojo connectors off. The findings they
-  imported stay in Yaqiz with their history, and **Connect → Upstream** still lists the connectors, with the type
-  **DefectDojo (removed in 1.1.9)**, until you delete them. The DefectDojo-compatible import API
-  (`/api/v2/import-scan/`, `/api/v2/reimport-scan/`) is unchanged.
 - **Commands for operating and troubleshooting**: `docs/cli-reference.md` in the package documents every deployment
   script and management command, how to check each part of the server, and the fix for common problems.
   `sudo ./deploy/help.sh` prints them on the server, and every script answers `--help` without changing anything. The
