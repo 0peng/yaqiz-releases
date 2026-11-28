@@ -7,6 +7,7 @@ people can see different menus and different data.
 In this chapter:
 
 * [Sign in](#sign-in)
+* [Sign out](#sign-out)
 * [Change your password](#change-your-password)
 * [Two-step verification](#two-step-verification)
 * [Your profile](#your-profile)
@@ -49,9 +50,27 @@ If sign-in fails, the message tells you why:
   administrator.
 * **Service users cannot log in interactively.** Service accounts are for scripts and CI/CD only.
 
+## Sign out
+
 To sign out, click your initials in the top-right corner and choose **Sign out**. The sign-in page opens and every
-other Yaqiz tab of the same browser follows, so nothing stays on screen on a shared computer. Your session also ends
-on its own after a time your administrator sets; you then sign in again.
+other Yaqiz tab of the same browser follows, so nothing stays on screen on a shared computer.
+
+Yaqiz also signs you out on its own:
+
+* **After inactivity.** After 30 minutes without activity (clicks, typing, scrolling, changes), Yaqiz signs you out
+  of the web interface. Your administrator can choose another time or turn this off
+  ([chapter 7](07-administration.md#sign-out-after-inactivity)). Activity in any Yaqiz tab of your browser counts; a
+  page that only refreshes itself does not. A minute before, a **Still there?** dialog counts down the seconds: click
+  **Stay signed in** to continue.
+* **At the end of the session.** Whatever your activity, a session ends 12 hours after you signed in, unless your
+  administrator set another length.
+
+Scripts and CI/CD pipelines that use an API token are not affected.
+
+An open page notices within a minute, without a refresh, that your session has ended, also when an administrator has
+deactivated your account. It then shows the sign-in page with the reason, for example "You were signed out after 30
+minutes without activity. Sign in again to continue." or "Your session reached its maximum length. Sign in again to
+continue." After you sign in, Yaqiz takes you back to the page you had open.
 
 ## Change your password
 
@@ -121,7 +140,8 @@ button next to the logo to collapse the sidebar to icons and **»** to expand it
   **Reporting** (Generated, Templates, Schedules) and **Calendar**.
 * **Connect**: **Upstream** (scanner API connectors), **Downstream** (ticketing and other integrations) and **Import**
   (Add Findings, Universal Parser, Import History).
-* **Act**: **Triage Engine** (automation rules), **Vulnerability Explorer**, **Root Causes** and **Risk Acceptances**.
+* **Act**: **Triage Engine** (automation rules), **Vulnerability Explorer**, **Advisories** (new CVEs, exploited
+  vulnerabilities and vendor advisories), **Root Causes** and **Risk Acceptances**.
 * **Inventory**: **Locations**, **Components**, **Organizations**, **Assets**, **Engagements**, **Tests** and
   **Findings** (Open, Mitigated, Risk Accepted, All, Groups, Templates).
 * **Settings**: configuration pages, shown only to administrators (see
@@ -143,7 +163,8 @@ button next to the logo to collapse the sidebar to icons and **»** to expand it
 
 **Choosing your notifications.** **Settings › Notifications › Personal** (page **My notifications**) lets you tick,
 per event (for example **SLA breached** or **Review requested**), whether it reaches you as an **In-app alert** in
-the bell and by **Email**; click **Save**. Email needs an address in your profile and mail enabled by your
+the bell and by **Email**; click **Save**. The **Advisories** group holds the alerts about new advisories, for
+example **New exploited vulnerability (CISA KEV)**. Email needs an address in your profile and mail enabled by your
 administrator. If your sidebar has no Settings section, press **Ctrl K**, type `Personal` and open **Notifications ›
 Personal**.
 
@@ -162,7 +183,9 @@ only the organizations and assets you may see, and every tile is a link to the m
 1. Pick the time window at the top right: **7d**, **30d**, **90d** or **1y** (remembered in this browser).
 2. Read the **Posture Score** (out of 1000: **Strong** from 800, **Needs attention** from 600, otherwise **At
    risk**) and its parts: **Open severity burden**, **SLA posture**, **Coverage confidence**, **Exploit pressure**
-   and **Automation health**. The tile **Weakest posture area** names the part that would raise the score most.
+   and **Automation health**. The tile **Weakest posture area** names the part that would raise the score most. As
+   long as none of the assets you can see has been scanned, there is no score: the card says **No score yet** and
+   offers **Import findings** and **Connect a scanner**, because nothing found is not the same as secure.
 3. Follow the **Flow** card: **Processed** findings in the window, **Unique after dedupe**, **Ready to work** (open
    findings rated Urgent or Needs Action) and **Resolved**, plus **Top sources** and **Open by risk**.
 4. Use the tiles below to jump to work: **Needs attention** (past-SLA Critical/High or known exploited findings),

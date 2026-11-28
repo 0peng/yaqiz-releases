@@ -2,7 +2,8 @@
 
 Every finding in Yaqiz belongs to an asset, and every asset to an organization. This chapter explains that model with
 a running example, then shows how to create and maintain organizations and assets, reorganize them in bulk with
-change plans, and how memberships and roles decide who sees which part of the inventory.
+change plans, how memberships and roles decide who sees which part of the inventory, and how to give a team a role on
+many assets at once.
 
 In this chapter:
 
@@ -16,6 +17,7 @@ In this chapter:
 * [Tests](#tests)
 * [Locations and Components](#locations-and-components)
 * [Members and roles: who can see what](#members-and-roles-who-can-see-what)
+* [Assign an owner to many assets](#assign-an-owner-to-many-assets)
 
 ## The data model
 
@@ -37,7 +39,10 @@ Retail                        organization  a business unit, team, portfolio or 
 * A **test** belongs to one engagement; a **finding** belongs to a test, and through it to the asset.
 
 You need not build this tree before importing: the import page can create a missing organization, asset and
-engagement on the fly (chapter 3). Roles granted on an organization or asset apply to everything below it.
+engagement on the fly, and an import of one report that covers many servers can create an asset for each server that
+has none yet ([chapter 3](03-bringing-in-findings.md#one-upload-for-many-assets)). A role granted on an organization
+applies to all of its assets; a role granted on an asset applies to its engagements, tests and findings, but not to
+its child assets.
 
 ## Organizations
 
@@ -92,8 +97,18 @@ engagements, tests and findings; its child assets are kept and become top-level.
 
 To change many assets at once, tick them in the list, click **Bulk edit…**, set **Business criticality**, **Internet
 accessible**, **External audience** or **Add tags**, and click **Apply** (up to 1,000 assets; assets you may not edit
-are skipped). To move an asset to another organization, change its **Organization** in the edit form; its child assets
-move along, so you need `asset.add` in the target organization and `asset.edit` on every child.
+are skipped). **Assign owner…**, next to it, gives one person or one group a role on the ticked assets (see
+[Assign an owner to many assets](#assign-an-owner-to-many-assets)). To move an asset to another organization, change
+its **Organization** in the edit form; its child assets move along, so you need `asset.add` in the target organization
+and `asset.edit` on every child.
+
+**Servers in one report.** A vulnerability report that covers many servers can be imported with one upload
+(**Connect › Import › Add Findings**, choose **Many assets**), and Yaqiz puts each server's findings on that server's
+own asset ([chapter 3](03-bringing-in-findings.md#one-upload-for-many-assets) gives the details). It recognizes the
+asset when its **Name** contains the server's IP address or is the server's host name, in full or short (the asset
+**Storefront** for the host `storefront.retail.example`), when the asset has the server among its locations from
+earlier scans, or when the server's IP address is written in its **Description**. So name the asset of a server after
+its host name or IP address, or note the IP address in its **Description**.
 
 ## Business context and Needs Attention
 
@@ -114,10 +129,10 @@ context" and its findings are scored as if that field had no weight.
 
 **Inventory › Assets › Hierarchy** shows a tree: each organization, its top-level assets and their child assets, with
 **Grade**, **Open** and **Critical** per row. An organization row adds up all of its assets, and a parent row shows
-how many open findings its children have (for example **2 children · +14 open below**). Type in **Find an asset** to
+how many open findings its children have (for example **2 children · +32 open below**). Type in **Find an asset** to
 filter the tree, and use **Expand all** and **Collapse all**.
 
-![Asset hierarchy tree with the Retail organization expanded](images/02-asset-hierarchy.png)
+![Asset hierarchy tree with four organizations expanded, among them Retail with Web shop and its child assets Checkout API and Storefront](images/02-asset-hierarchy.png)
 
 A parent and its child always belong to the same organization. Set a parent in the asset form (**Parent asset**,
 which needs `asset.edit` on the parent) or with a change plan.
@@ -167,7 +182,7 @@ asset_id,asset_name,organization,parent_name,business_criticality,internet_acces
 ,Mobile app,Retail,,high,true,"pci,tier1"
 ```
 
-![Draft change plan under review with summary tiles and the Assets moved card](images/02-change-plan-review.png)
+![Draft change plan under review with summary tiles and the Assets created, Parents changed and Fields changed cards](images/02-change-plan-review.png)
 
 * **Stale** means the hierarchy changed after your review (for example, findings were imported into an asset the
   plan deletes), so the plan did not run. Click **Re-run dry run** to
@@ -252,5 +267,51 @@ Managing members needs `member.manage` there (Maintainer or Owner). You can only
 permissions you hold there, and only owners can grant the Owner role. Your global permissions are listed under
 **Profile › Your permissions**; administrators manage groups and global roles under **Settings › Groups** and
 **Settings › Users**.
+
+To give a person or a group a role on many assets at once, use **Assign owner…** (next section) instead of the
+**Members** tab of each asset.
+
+## Assign an owner to many assets
+
+A team that looks after a platform needs a role on the platform's asset and on the assets of all its servers. Instead
+of adding the team on one **Members** tab after another, give one person or one group a role on many assets at once:
+
+1. Open **Inventory › Assets › All** and tick the assets. Filter the list first if that helps, for example by
+   **Organization**.
+2. Click **Assign owner…** above the list. A dialog opens, titled with the number of assets you ticked, for example
+   **Assign an owner to 3 assets**.
+3. Choose **A group (team)** or **A person**, then pick the **Group** or the **Person**.
+4. Choose the **Role on the assets**: what they may do there. **Reader** views, **Writer** also triages and edits
+   findings, **Maintainer** also edits the assets and manages members. The list also offers the other roles, among
+   them **Owner** and the roles your administrator created.
+5. Tick **Also their child assets (for example the servers of a platform)** to give the same role on every asset below
+   the ticked ones, at every level (the child assets you can see).
+6. Click **Assign**. A message tells you on how many assets the role was added and how many already had it.
+
+![Assets list with three assets ticked and the Assign an owner to 3 assets dialog, giving the group Platform Engineering the role Maintainer, child assets included](images/02-assign-owner.png)
+
+What happens:
+
+* The person or group becomes a member of each asset, exactly as if you had added them on the asset's **Members** tab:
+  they see its findings and may do there what the role allows. Each new membership is recorded in the audit log.
+* Assets where they already have this role stay as they are. A different role they already hold on an asset is kept
+  and the new one is added next to it, so assigning never takes access away. To take a role away later, remove it on
+  the asset's **Members** tab.
+* It is all or nothing. You need `member.manage` (Maintainer or Owner) on every asset, child assets included, and you
+  can only give a role whose permissions you hold there; only owners can give the Owner role. If one asset fails this
+  check, nothing is changed and the message names the asset: "Nothing was changed: you may not give the role … on …".
+* At most 1,000 assets at once, child assets included.
+* **Assign owner…** is shown only to superusers and to people who may manage members through a global role (for
+  example global **Maintainer** or **Owner**). If you are Maintainer or Owner of an organization or asset only, use
+  the **Members** tab instead (an organization's **Members** tab covers all of its assets).
+
+Memberships also decide who owns which findings. A person owns the findings assigned to them or to one of their groups
+(as **Owner team**), and the findings on assets where they are members, directly or through a group, on the asset or on
+its organization. A group owns the findings whose **Owner team** it is or that are assigned to one of its members, and
+the findings on assets where the group is a member, on the asset or on its organization. The **Owner** and **Group**
+filters of the Insights pages ([chapter 6](06-dashboards-and-reports.md#insights)) and the **Owned by user ID (or me)**
+and **Owned by group ID** filters of the findings list
+([chapter 4](04-working-with-findings.md#find-the-findings-you-need)) work this way, so once a team is assigned, its
+work shows up there.
 
 Next: [3. Bringing in findings](03-bringing-in-findings.md)

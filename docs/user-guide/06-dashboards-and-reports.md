@@ -25,7 +25,14 @@ In this chapter:
   and **At risk** (below 600). The score adds five parts: **Open severity burden** (up to 300 points), **SLA posture**
   (200), **Coverage confidence** (200, assets scanned in the last 90 days), **Exploit pressure** (150, open known
   exploited findings and EPSS) and **Automation health** (150, how much triage is done by rules rather than by hand).
-  A part marked *(neutral)* has no data yet.
+  A part marked *(neutral)* has no data of its own yet, and unknown does not count as good: a neutral **SLA posture**
+  or **Exploit pressure** earns the same share of its points as **Coverage confidence**, and a neutral **Automation
+  health** earns half of its points. Scanning one asset out of ten and finding nothing therefore does not score better
+  than scanning them all and finding issues. Yaqiz 1.1.9 introduced this calculation, so scores changed with the
+  upgrade.
+* **No score yet**: the Posture Score card says this instead of showing a score as long as none of the assets you can
+  see has been scanned, and offers **Import findings** and **Connect a scanner**. **Weakest posture area** then says
+  "scan your assets to get a score".
 * **Flow**: **Processed** findings in the window, **Unique after dedupe**, **Ready to work** (open Urgent and Needs
   Action findings) and **Resolved**, with the median days to remediate. Below are **Top sources** (findings per tool)
   and **Open by risk**.
@@ -66,17 +73,35 @@ bar or slice of a finding chart, or a count tile, to open the matching list. The
 
 **Overview › Insights** has five pages that answer standard questions about your program. All pages share a filter
 bar: **Timeframe** (last 7, 14, 30, 90 or 180 days, or the last 12 months; 90 days by default), **Organization**,
-**Asset**, **Tool**, **Tool category** and **Tags**. Click **Apply** to use the filters and **Clear** to reset them.
-The filters stay in place when you switch between the pages.
+**Asset**, **Owner**, **Group**, **Category**, **EOS / EOL**, **Age**, **Tool**, **Tool category** and **Tags**. Click
+**Apply** to use the filters and **Clear** to reset them. The filters stay in place when you switch between the pages.
+
+* **Owner** and **Group** show the work of one person or one team. **Owner** keeps the findings assigned to the person
+  or whose **Owner team** is one of their groups, and the findings on assets where the person or one of their groups
+  is a member (on the asset or on its organization). **Group** keeps the findings whose **Owner team** is the group or
+  that are assigned to one of its members, and the findings on assets where the group is a member (again on the asset
+  or on its organization).
+* **Category** is what the vulnerability is about: **Windows OS**, **Unix / Linux OS**, **Application**, **Web
+  (servers, CMS, web apps)**, **Database**, **Network / hardware**, **TLS & configuration** or **Other**. Yaqiz works it
+  out for every finding from its title, its component, the scanner's own category, the host's operating system and the
+  kind of tool; where it is wrong, change it on the finding
+  ([chapter 4](04-working-with-findings.md#categories-and-end-of-life-software)).
+* **EOS / EOL** shows **Only end of life** findings (software past its end of life or end of support) or the findings
+  **Without end of life**.
+* **Age** counts the days since a finding was found: **0–30 days**, **31–60 days**, **61–90 days**, **91–180 days**,
+  **181–365 days**, **Over 365 days**, **Older than 30 days** or **Older than 90 days**.
+
+**Tests performed** and **Assets tested** follow the **Organization**, **Asset**, **Owner**, **Group**, **Tool** and
+**Tool category** filters.
 
 On every chart, the menu (⋮) offers **View as table** and **Download CSV**, and some charts let you switch the chart
-type. Tables have a **CSV** button. Most bars and numbers open the matching findings when you click them. **Export as
-PDF** opens your browser's print dialog with a print layout; choose to save as PDF there.
+type. Tables have a **CSV** button. Most bars and numbers open the matching findings when you click them, with the
+same filters. **Export as PDF** opens your browser's print dialog with a print layout; choose to save as PDF there.
 
 * **Executive**: *How is our posture overall?* A summary strip, active findings by severity over time, the status mix,
-  past-SLA findings by organization and asset, mean time to remediate, and average age by severity and risk. The
-  **Organizations** and **Assets** tables show open findings per severity, Urgent and Needs Action counts, **Past
-  SLA**, **SLA %**, **Mitigated** and **MTTR (d)** for each organization and asset.
+  past-SLA findings by organization and asset, mean time to remediate, average age by severity and risk, and open
+  findings by category and by age. The **Organizations** and **Assets** tables show open findings per severity, Urgent
+  and Needs Action counts, **Past SLA**, **SLA %**, **Mitigated** and **MTTR (d)** for each organization and asset.
 * **Priority**: *Where does risk concentrate, and what do we fix first?* Open findings by risk band, the priority
   distribution, risk over time, average age by risk and **Mitigated within SLA by risk**. The **Top assets**, **Top
   components** and **Top hosts** tables rank where the Urgent and Needs Action findings are.
@@ -89,7 +114,18 @@ PDF** opens your browser's print dialog with a print layout; choose to save as P
 * **Tool**: *What does each security tool contribute?* Severity by tool, false positives by tool, EPSS by tool, a
   **Tools** table, and **Severity by tool, monthly** with severity and risk counts per tool and month.
 
-![Executive Insights with filters and tables](images/06-insights-executive.png)
+![Executive Insights with the filter bar, the summary strip and the first charts](images/06-insights-executive.png)
+
+Two charts of the **Executive** page show where the open findings are and how old they are:
+
+* **Open findings by category**: one bar per category that has open findings, with the end-of-life findings
+  (**Open, end of life (EOS/EOL)**) stacked on top, so you see who has to fix what.
+* **Open findings by age**: the open findings by days since they were found, from **0-30 days** to **Over 365 days**,
+  stacked by severity: the aging of the backlog.
+
+Click a bar to open those findings.
+
+![Executive Insights charts Average age by severity, Average age by risk, Open findings by category and Open findings by age](images/06-insights-categories.png)
 
 ## My Work
 
@@ -118,7 +154,9 @@ asset.
 3. Optionally change the **Title**. It defaults to the template name.
 4. Choose the **Format**: **HTML (printable, use Print to PDF)**, **CSV**, **Excel (XLSX)** or **JSON**.
 5. Optionally enter **Runtime filters (JSON)**. They use the finding filter keys of the Findings page, for example
-   `{"organization": "2", "severity": "Critical,High"}`, and apply on top of each block's own filters.
+   `{"organization": "2", "severity": "Critical,High"}`, and apply on top of each block's own filters. The category,
+   end-of-life and age filters work here too, for example `{"category": "windows_os", "end_of_life": "true"}` for
+   Windows findings about end-of-life software.
 6. Click **Generate**. When the dialog says "Your report is ready", click **Open** (HTML) or **Download**.
 
 The **Generated** list shows the reports that you requested, with their template, format, status and dates. Use
@@ -131,7 +169,8 @@ to PDF from your browser.
 
 **Overview › Reporting › Templates** lists the templates, which are shared with everyone. Anyone can **View** a
 template, and with the **Generate reports** permission you can click **Generate**. Creating and changing templates
-needs the **Manage finding and report templates** (`config.templates`) permission.
+needs the **Manage finding and report templates** (`config.templates`) permission. A new installation has no report
+templates until someone creates one; the **Executive vulnerability summary** in the screenshot below is sample data.
 
 1. Click **New template**. Enter a **Name**, a **Default format** and a **Description**.
 2. Under **Add block**, click the blocks you need: **Cover page**, **Heading**, **Text**, **Metrics**, **Findings

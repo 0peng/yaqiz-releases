@@ -2,13 +2,15 @@
 
 This chapter shows how to find the findings that matter, read what Yaqiz knows about each one, and move them to a
 decision: fixed, false positive, out of scope or accepted risk. It also covers the views that group findings by
-vulnerability and by root cause, so you can fix one thing and close many findings.
+vulnerability and by root cause, so you can fix one thing and close many findings, and the **Advisories** page, which
+tells you about new CVEs and exploited vulnerabilities and which of your findings they affect.
 
 In this chapter:
 
 * [Find the findings you need](#find-the-findings-you-need)
 * [Read a finding](#read-a-finding)
 * [Severity, risk, priority and SLA](#severity-risk-priority-and-sla)
+* [Categories and end-of-life software](#categories-and-end-of-life-software)
 * [Change a finding's status](#change-a-findings-status)
 * [Assign findings and request reviews](#assign-findings-and-request-reviews)
 * [Bulk actions](#bulk-actions)
@@ -16,6 +18,7 @@ In this chapter:
 * [Finding groups](#finding-groups)
 * [Finding templates](#finding-templates)
 * [Vulnerability Explorer](#vulnerability-explorer)
+* [Advisories](#advisories)
 * [Root Causes](#root-causes)
 
 ## Find the findings you need
@@ -36,16 +39,32 @@ on asset, engagement and test pages work the same way.
 Useful filters: **Outside of SLA**, **SLA days remaining ≤**, **Known exploited (KEV)**, **EPSS score ≥ (0-1)**,
 **Risk**, **Fix available**, **Asset internet accessible**, **Assignee (id or 'me')** and **Duplicate**.
 
+To filter by what a finding is about, how old it is and who owns it:
+
+* **Category** (group Triage): one or more categories, such as **Windows OS** or **Web (servers, CMS, web apps)**.
+* **End of life (EOS/EOL)** (group Triage): **Yes** for only the findings about software past its end of life or end
+  of support, **No** for all others. Both are explained in
+  [Categories and end-of-life software](#categories-and-end-of-life-software).
+* **Age at least (days)** and **Age at most (days)** (group Dates): the days since a finding was discovered. Together
+  they give a range, for example 31 and 60 for the findings that are one to two months old.
+* **Owned by user ID (or me)** and **Owned by group ID** (group Context): the findings a person or a group owns. A
+  person or group owns a finding when it is assigned to them, or when they are members of its asset (on the asset or
+  on its organization); a person also owns what their groups own. Enter `me` for your own findings, or the ID of a
+  user or group. You rarely need to type them: a number on an Insights page filtered by **Owner** or **Group** opens
+  the findings list with this filter set ([chapter 6](06-dashboards-and-reports.md#insights)).
+
 There is no separate "saved view": filters, sorting and paging are kept in the page address, so bookmark the page or
 send the link to a colleague (who sees only what their own permissions allow). **Overview › My Work** has ready-made
 shortcuts such as "My open findings" and "Unassigned urgent findings".
 
 The default columns are **Severity**, **Risk**, **Finding** (title plus component or file), **Vulnerability IDs**,
-**Asset**, **Status**, **Age**, **SLA**, **EPSS**, **Found By** and **Tags**. You can add **Priority**,
-**Organization**, **KEV**, **CWE**, **Assignee**, **Engagement**, **Unique ID From Tool**, **Discovered** and
-**Created**.
+**Asset**, **Status**, **Category** (with an **EOL** mark on end-of-life findings), **Age**, **SLA**, **EPSS**,
+**Found By** and **Tags**. You can add **Priority**, **Organization**, **KEV**, **CWE**, **Assignee**, **Engagement**,
+**Unique ID From Tool**, **Discovered** and **Created**. The **Category** column came with Yaqiz 1.1.8: if you opened
+the findings list in this browser before the upgrade, the browser keeps your earlier columns, so tick **Category**
+under **Columns** to show it.
 
-![Open findings list with severity counts, a filter chip and selected rows](images/04-findings-list.png)
+![Open findings list with severity counts, the filters Open (actionable) and Outside of SLA, two selected rows and the Category column](images/04-findings-list.png)
 
 ## Read a finding
 
@@ -56,10 +75,11 @@ when the finding is a duplicate (with a link to the original) or under review.
 - **Tabs**: **Description**, **Mitigation**, **Mitigation Policy** (your organization's standard guidance),
   **Impact**, **References**, **Steps to Reproduce** (with the severity justification), **Notes**, **Files**,
   **History**, and **Request / Response** when the scanner recorded HTTP traffic.
-- **Details** card: **Status**, **Severity**, **Risk** (with a bar), **Priority**, **Age**, **SLA** and **SLA due
-  date**, **Location** (file and line), **Component**, **Fix**, **Date discovered**, **Found by**, **Assignee**,
-  **Owner team**, **Planned remediation**, **CWE**, **Vulnerability IDs**, **CVSS v3**, **EPSS score / percentile**,
-  **Known exploited**, **Service**, **Finding group**, and after closing **Mitigated** and **Within SLA**.
+- **Details** card: **Status**, **Severity**, **Risk** (with a bar), **Priority**, **Age**, **Category** (marked
+  **set by hand** when someone chose it), **End of life (EOS/EOL)**, **SLA** and **SLA due date**, **Location** (file
+  and line), **Component**, **Fix**, **Date discovered**, **Found by**, **Assignee**, **Owner team**, **Planned
+  remediation**, **CWE**, **Vulnerability IDs**, **CVSS v3**, **EPSS score / percentile**, **Known exploited**,
+  **Service**, **Finding group**, and after closing **Mitigated** and **Within SLA**.
 - **Threat Intelligence**: the EPSS probability of exploitation in the next 30 days and its percentile, whether the
   CVE is listed in CISA KEV (with the federal due date), exploit maturity and reachability.
 - **Locations**: every affected URL, host, file or component with its status (for example Active or Mitigated).
@@ -88,7 +108,10 @@ when the finding is a duplicate (with a link to the original) or under review.
   unreachable ones.
 - **Priority override** and **Risk override** (in **Edit**) replace the computed values for one finding.
 - **EPSS and KEV** data is attached to findings with CVE identifiers when they are imported, if Yaqiz already knows
-  the CVE, and otherwise by the daily enrichment run.
+  the CVE, and otherwise by the daily enrichment run. When CISA adds a CVE to its KEV catalog, the findings that carry
+  it are marked as known exploited within the hour, without waiting for the daily run, when the **CISA KEV** advisory
+  feed ([Advisories](#advisories)) and the **CISA KEV lookup** of Finding Enrichment are both on
+  ([chapter 7](07-administration.md#advisory-feeds)).
 
 **SLA.** The SLA configuration of the asset (the default one unless your administrator chose another) sets how many
 days a finding may stay open, by severity or by risk band. The clock normally starts on the discovery date; a
@@ -97,6 +120,35 @@ on severity. The **SLA** column counts the days left: amber within 7 days, "Due 
 once the finding is overdue. Use the **Outside of SLA** filter to list overdue findings; if an administrator turned on
 SLA breach notifications, you are also alerted. When a finding is closed, **Within SLA** records whether it was closed
 in time. Configuring SLAs and prioritization engines is covered in [chapter 7](07-administration.md#risk--matching).
+
+## Categories and end-of-life software
+
+Every finding has a **category** that says what the vulnerability is about, and so which kind of team usually fixes
+it: **Windows OS**, **Unix / Linux OS**, **Application**, **Web (servers, CMS, web apps)**, **Database**, **Network /
+hardware**, **TLS & configuration** or **Other**. Yaqiz works it out for each finding from its title, its component,
+the scanner's own category (for example the Qualys "Category"), the host's operating system and the kind of tool that
+found it. Findings that existed before Yaqiz 1.1.8 were categorized during the upgrade.
+
+Findings about software past its end of life or end of support are flagged as end of life (EOS/EOL). Yaqiz recognizes
+them by their title, for example Qualys "EOL/Obsolete …", "Unsupported Version Detection" or "End of Life / End of
+Support". The flag follows the title; it cannot be set by hand.
+
+You find both in the **Category** column of the findings lists (with an **EOL** mark; click the heading to sort by
+category), on the finding's **Details** card and in the filters **Category** and **End of life (EOS/EOL)**
+([above](#find-the-findings-you-need)). The Insights pages filter by **Category** and **EOS / EOL**, and
+**Overview › Insights › Executive** charts the open findings by category
+([chapter 6](06-dashboards-and-reports.md#insights)).
+
+**Change a category.** Where the automatic choice is wrong, choose the category by hand:
+
+* One finding: click **Edit**, choose the **Category** and click **Save**.
+* Many findings: tick them in a findings list, choose **Bulk actions › Edit severity / plan…**, pick the **Category**
+  and click **Apply**.
+
+A category chosen by hand is kept when later imports update the finding, and the **Details** card marks it **set by
+hand**. To let Yaqiz work the category out again, choose **Automatic**. In the **Edit** dialog this option shows the
+current automatic category, for example **Automatic (Application)**, or reads **Automatic (recalculated)** when the
+category was chosen by hand.
 
 ## Change a finding's status
 
@@ -117,8 +169,8 @@ you may not use are not shown. Open the finding and use the header buttons or th
 
 The ⋯ menu also offers **Request review**, **Push to issue tracker** (see
 [chapter 5](05-automation.md#downstream-issue-trackers)), **Copy finding** and **Delete**. Use **Edit** to change the
-finding's text, severity, CWE, CVSS v3 vector, component, tags, **Planned remediation date** and **Effort for
-fixing**.
+finding's text, severity, CWE, CVSS v3 vector, component, **Category**, tags, **Planned remediation date** and
+**Effort for fixing**.
 
 A finding shows one status at a time: **Active**, **Inactive**, **Under Review**, **Mitigated**, **Risk Accepted**,
 **Out Of Scope**, **False Positive** or **Duplicate**. Duplicates cannot be reopened; reset the duplicate status
@@ -147,7 +199,8 @@ positive**, **Out of scope** or **Mitigated**), adds a **Note** and clicks **Cle
 2. Click **Bulk actions** and choose:
    - **Change status…**: **Mitigated (close)**, **False positive**, **Out of scope**, **Verified**, **Unverified**,
      **Active (reopen)**, **Inactive** or **Under defect review**, with an optional **Note** kept when closing.
-   - **Edit severity / plan…**: **Severity**, **Planned remediation date**, **Planned remediation version**.
+   - **Edit severity / plan…**: **Severity**, **Category** (one of the categories, or **Automatic**), **Planned
+     remediation date**, **Planned remediation version**.
    - **Tags…**: **Add**, **Remove** or **Replace all** tags.
    - **Assign…**, **Request review…**, **Accept risk (simple)**, **Unaccept risk**, **Push to issue tracker** or
      **Delete…**.
@@ -219,7 +272,8 @@ CWE, CVSS v3 vector, description, mitigation, impact, references, vulnerability 
 
 **Act › Vulnerability Explorer** groups findings by CVE or advisory, with EPSS and CISA KEV intelligence. Use it to
 answer "where are we exposed to this vulnerability?" and to spot the exploited ones first. The page header shows when
-threat intelligence was last synced and how many CVEs are known exploited.
+threat intelligence was last synced and how many CVEs are known exploited. It starts from your findings; to hear about
+new vulnerabilities as they are published, use [Advisories](#advisories).
 
 1. Search by **CVE / advisory ID**, or filter, for example by **Known exploited (KEV)**, **Used in ransomware**, **EPSS
    score ≥ (0-1)**, **Fix available**, **Asset criticality** or **Asset internet accessible**.
@@ -231,6 +285,67 @@ threat intelligence was last synced and how many CVEs are known exploited.
 Superusers also see **Sync KEV/EPSS**, which downloads the latest CISA KEV catalog and EPSS scores and applies them.
 
 ![Vulnerability Explorer filtered to known exploited vulnerabilities](images/04-vulnerability-explorer.png)
+
+## Advisories
+
+**Act › Advisories** tells you about vulnerabilities as they are published, before a scan finds them on your assets.
+An advisory is one such notice: a new CVE, a vulnerability exploited in the wild (often the first sign of a zero-day)
+or a vendor's security advisory. Yaqiz polls the advisory feeds every hour: by default **CISA KEV** (the catalog of
+known exploited vulnerabilities), **NVD** (every new CVE) and the **GitHub Advisory Database**, plus the RSS feeds your
+administrator turned on or added, for example a vendor's security advisories. An administrator chooses the feeds and
+keeps the watchlist of the products and vendors you run under **Settings › Risk & Matching › Advisory Feeds**
+([chapter 7](07-administration.md#advisory-feeds)); with the permission "Edit system settings",
+**Feeds and watchlist** on this page takes you there.
+
+Advisories are public information, so everyone sees the same list. What differs from one person to the next is which
+of their findings an advisory affects.
+
+![Advisories page with its summary tiles and tabs, listing seven advisories: CISA KEV entries for FortiOS and Cisco IOS XE that match the watchlist, and advisories that affect findings](images/04-advisories.png)
+
+1. Read the tiles: **New this week** (with the total below), **Exploited this week** (added to CISA KEV), **Watchlist
+   matches this week**, **Affecting your findings** (the advisories with a CVE of an open finding you can see) and
+   **Not reviewed**. Click a tile to open the matching tab.
+2. Choose a tab:
+   * **All**: every advisory, newest first.
+   * **Exploited (KEV)**: vulnerabilities known to be exploited, that is the CISA KEV entries and the advisories of the
+     other feeds for a CVE in the KEV catalog.
+   * **Matches watchlist**: advisories that name a watchlist term, for example `FortiOS` or `Cisco IOS XE`, as a whole
+     word in their title, summary or products. The **Watchlist** column shows the terms.
+   * **Affects my findings**: advisories with a CVE that an open finding you can see carries.
+   * **Not reviewed**: advisories that nobody has marked as reviewed yet.
+3. Search with **Search title, summary, CVE**, or click **Add filter** for **Severity**, **Source type**, **Published
+   from** and **Published to**. Click the **Published**, **CVSS** or **EPSS** heading to sort.
+4. Read a row: the **ID** (a link to the advisory's web page), the **Title** with the products it names, **Severity**,
+   **CVSS**, **EPSS**, **Exploited** (a **KEV** badge), **Watchlist**, **Affects**, the **Source** feed and
+   **Reviewed**. CISA KEV entries have no severity or CVSS score of their own: their severity shows **Unknown**.
+
+Click a row to open the advisory in a panel on the right: its summary, **Source**, **Published**, **First seen**,
+**CVSS** with the vector, **EPSS**, **CWE** and **Known exploited**; for a CISA KEV entry also the **KEV date**, the
+**Required action** and its **Due date**; then its **CVEs**, **Products** and **References**. **Open advisory** opens
+its web page, like the link on the **ID**.
+
+**From an advisory to your findings.** Yaqiz compares the CVEs of each advisory with the vulnerability IDs of the open
+findings you may see. When some match, **Affects** shows how many, for example **6 findings on 6 assets**, and the
+panel repeats it: "Affects 6 findings on 6 assets that you can see." Click the count, or **Open findings**, to list
+these findings: the findings list opens with the filters **Vulnerability ID** and **Open (actionable)** set. From there
+you assign, ticket, close or accept them as usual. Each CVE under **CVEs** opens the open findings with that CVE alone.
+The counts include only the findings you may see, so a colleague in another team may see other numbers for the same
+advisory.
+
+**Review.** When you have checked an advisory, for example found that you do not run the product, click **Mark
+reviewed** in its row or panel. It then shows **Reviewed** for everyone, with who reviewed it and when, and leaves the
+**Not reviewed** tab; click **Reviewed** to take it back. Marking needs the permission "Edit system settings" or a
+global role that may edit findings, such as Writer; others see **Reviewed** or **Not reviewed** only.
+
+**Alerts.** To hear about new advisories without opening the page, subscribe to **New exploited vulnerability (CISA
+KEV)**, **New advisory matching the watchlist** or **New advisory affecting your findings** under **Settings ›
+Notifications › Personal** ([chapter 1](01-first-steps.md#the-layout)). An alert about your findings comes only when
+you can see at least one affected finding, and counts only the findings you can see. A feed's first successful poll
+fills the list without alerts.
+
+If the page says **No advisories yet**, no feed has delivered any advisories so far. The feeds are polled every hour,
+and the server must be able to reach them; ask your administrator to check them
+([chapter 7](07-administration.md#advisory-feeds)).
 
 ## Root Causes
 

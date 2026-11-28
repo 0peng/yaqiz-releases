@@ -2,7 +2,9 @@
 
 The Triage Engine runs rules that react to new findings, finished imports, asset changes, schedules and inbound
 webhooks. A rule can change findings and assets, open tickets and send messages for you. This chapter shows how to
-build, test and monitor a rule, how to check what it sent, and how to connect issue trackers and chat tools.
+build, test and monitor a rule, how to check what it sent, and how to connect issue trackers (among them ManageEngine
+ServiceDesk Plus) and chat tools. It ends with the alerts about new advisories, which reach people through the
+notification settings rather than through rules.
 
 In this chapter:
 
@@ -15,7 +17,9 @@ In this chapter:
 * [Deliveries: what was sent](#deliveries-what-was-sent)
 * [Webhook receivers](#webhook-receivers)
 * [Downstream issue trackers](#downstream-issue-trackers)
+* [ManageEngine ServiceDesk Plus](#manageengine-servicedesk-plus)
 * [Slack, Teams and notification webhooks](#slack-teams-and-notification-webhooks)
+* [Advisory alerts](#advisory-alerts)
 
 ## Before you start
 
@@ -45,8 +49,17 @@ again.
 | **Manual Run** | Someone clicks **Run now** | **Entity**, scope |
 | **On an Inbound Webhook** | A [webhook receiver](#webhook-receivers) gets a payload | **Find findings by**, **Value path in payload** |
 
-**Scope** uses the same filters as the findings list. Click **Add filter**, or switch to **Raw JSON**. The other
-nodes are grouped in the palette:
+An upload with **Many assets** ([chapter 3](03-bringing-in-findings.md#one-upload-for-many-assets)) counts as one
+import per asset: **When a Scan Has Landed** starts once for each asset's import, and **On Finding Event** for the
+findings that each of them creates.
+
+**Scope** uses the same filters as the findings list. Click **Add filter**, or switch to **Raw JSON**. Since Yaqiz
+1.1.8 they include **Category**, **End of life (EOS/EOL)** and **Age at most (days)**
+([chapter 4](04-working-with-findings.md#find-the-findings-you-need)), and the ownership filters
+**Owned by user ID (or me)** and **Owned by group ID** ([chapter 2](02-inventory.md#assign-an-owner-to-many-assets)).
+In a rule's scope, enter a user ID: `me` matches nobody there.
+
+The other nodes are grouped in the palette:
 
 * **Logic**: **If / Filter** sends items that match its **Conditions** to its `true` output and all other items to
   `false`. Set **Match** to **All conditions** or **Any condition**. **Limit** passes at most N items, highest
@@ -233,9 +246,10 @@ but runs nothing. The **Received** and **Last received** columns show the traffi
 and downstream connectors** (`config.connectors`) permission.
 
 1. On **Issue trackers**, click **Add tracker**. Choose the **Type**: Jira, GitHub Issues, GitLab Issues, Azure DevOps
-   Boards, ServiceNow, Linear or Generic webhook.
+   Boards, ManageEngine ServiceDesk Plus, ServiceNow, Linear or Generic webhook.
 2. Enter a **Name** and the **URL**, for example `https://jira.example.com`. For Jira, enter the account email in
-   **Username** and the API token in **API token**. Secrets are write-only.
+   **Username** and the API token in **API token**. Secrets are write-only. ServiceDesk Plus asks for other
+   credentials: see [ManageEngine ServiceDesk Plus](#manageengine-servicedesk-plus).
 3. Optionally fill **Options (JSON)**. For Jira, `{"close_transition": "Done", "reopen_transition": "To Do"}` names
    the workflow transitions that Yaqiz uses. Click **Add tracker**, then **Test connection** on its card.
 4. On **Mappings**, click **Add mapping**. Choose the **Issue tracker** and, under **Applies to**, either **One
@@ -247,8 +261,8 @@ and downstream connectors** (`config.connectors`) permission.
 | Setting | What happens |
 |---|---|
 | **Push mode: Manual** | Tickets only from **Push to issue tracker** in a finding's action menu (or the bulk action of the same name), from an import with the push option, or from a rule's **Create a Ticket** node, as in the [example rule](#build-your-first-rule). |
-| **Push mode: Automatically for new findings** | Also every new finding of an import or connector sync at or above the minimum severity. |
-| **Push mode: Automatically for all matching findings** | Also every open finding already in scope: when you save the mapping, then every 30 minutes, at most 200 tickets per run. |
+| **Push mode: Automatic for new findings** | Also every new finding of an import or connector sync at or above the minimum severity. |
+| **Push mode: Automatic for all matching findings** | Also every open finding already in scope: when you save the mapping, then every 30 minutes, at most 200 tickets per run. |
 | **Push finding notes as comments** | Public notes on the finding are added to its ticket. Private notes are not. |
 | **Close tickets when findings are mitigated** | Closing a finding, or marking it false positive or out of scope, closes its ticket; reopening the finding reopens it. This follows every change: the finding page, bulk actions, rules and re-imports. |
 | **One ticket per finding group** | The findings of a [finding group](04-working-with-findings.md#finding-groups) share one ticket, which closes when every finding of the group is closed. |
@@ -265,7 +279,63 @@ the finding. Webhook-type trackers cannot be asked and keep the status Yaqiz las
 change, for example a Jira workflow without the transition named in the tracker's options (`close_transition`,
 default "Done"), **Sync error** says why and the ticket stays as it was.
 
-![Downstream integrations, Mappings tab](images/05-downstream-mappings.png)
+![Downstream integrations, Mappings tab with two Jira mappings: the organization Retail to the project SEC and the asset Web shop to the project SHOP](images/05-downstream-mappings.png)
+
+## ManageEngine ServiceDesk Plus
+
+Yaqiz opens a ServiceDesk Plus request for a finding, on premises or in ServiceDesk Plus Cloud, and keeps the request
+in step with the finding.
+
+**Add the tracker**
+
+1. On **Connect › Downstream**, tab **Issue trackers**, click **Add tracker** and choose
+   **ManageEngine ServiceDesk Plus** as the **Type**.
+2. Enter a **Name** and the **URL**: the address of your ServiceDesk Plus server, for example
+   `https://servicedesk.example.com:8080`, or the address of your ServiceDesk Plus Cloud portal (the field shows an
+   example).
+3. Enter the credentials. The key field is labeled
+   **On premises: technician API key · Cloud: client secret, a space, the refresh token**.
+   * **On premises**: leave **Username** empty and enter a technician's API key (in ServiceDesk Plus: Admin ›
+     Technicians › Generate API key).
+   * **ServiceDesk Plus Cloud**: use a Zoho self-client with the scope `SDPOnDemand.requests.ALL`. Enter its client ID
+     in **Username**, and in the key field the client secret, a space, then the refresh token. In **Options (JSON)**,
+     add `data_centre` with the Zoho data centre of your account: `us`, `eu`, `in`, `au`, `jp`, `ca`, `uk`, `sa` or
+     `cn`, for example `{"data_centre": "eu"}`.
+4. Optionally add more keys to **Options (JSON)**:
+   * `close_state`: the status a request gets when its finding is closed (default `Closed`), and `closure_code`, a
+     closure code to set with it.
+   * `reopen_state`: the status a request gets when its finding is reopened (default `Open`).
+   * `priority_mapping`: the name of the ServiceDesk Plus priority for each severity. Without it, Critical and High
+     become High, Medium stays Medium, and Low and Info become Low. With it, list all five severities: a severity left
+     out is sent without a priority.
+5. Click **Add tracker**, then **Test connection** on its card. "Connection OK: Signed in to ServiceDesk Plus and read
+   the request list." means that the credentials work.
+
+**Map assets to a group**
+
+On **Mappings**, click **Add mapping** as for any tracker ([above](#downstream-issue-trackers)). For ServiceDesk Plus,
+the fields mean:
+
+* **Project**: the ServiceDesk Plus group the requests go to.
+* **Issue type**: the request type. The default, **Bug**, is not sent.
+* **Component**: the category (optional).
+* **Labels** are not sent to ServiceDesk Plus.
+
+**What Yaqiz creates and keeps in sync**
+
+* One request per finding, or one per finding group with **One ticket per finding group**. Its subject is the finding
+  title (for a group, the group's name and its number of findings), its description holds the same details as any
+  ticket, and the severity (for a group, the highest) sets its priority. The ticket key links to the request in
+  ServiceDesk Plus.
+* With **Close tickets when findings are mitigated**, a finding that is closed, or marked false positive or out of
+  scope, sets its request to the `close_state` status, with a resolution and closure comments saying that the finding
+  is fixed, a false positive or out of scope (and the `closure_code`, if set). Reopening the finding sets the request
+  to `reopen_state`.
+* With **Push finding notes as comments**, public notes on the finding are added to the request as notes for the
+  technicians; the requester does not see them.
+* Every 30 minutes Yaqiz reads the status of each request and shows it under **Status** on the **Tickets** tab and in
+  the finding's **Tickets** card. A request closed in ServiceDesk Plus does not close the finding.
+* When ServiceDesk Plus refuses a change, **Sync error** shows its message and the request stays as it was.
 
 ## Slack, Teams and notification webhooks
 
@@ -273,8 +343,35 @@ default "Done"), **Sync error** says why and the ticket stays as it was.
   node. When that field is empty, they use **Slack incoming webhook URL** or **Teams webhook URL** from
   **Settings › System Settings** (section **Notifications**). **Call a Webhook** posts JSON to any URL, with an
   optional **Bearer secret**.
-* **Platform events**, such as imports, SLA breaches and risk acceptances, are routed to Slack, Teams, email and
-  notification webhooks under **Settings › Notifications › System**. JSON receivers for those events are set up
-  under **Settings › Notifications › Webhooks**. See [chapter 7](07-administration.md#notifications).
+* **Platform events**, such as imports, SLA breaches, risk acceptances and new advisories
+  ([Advisory alerts](#advisory-alerts)), are routed to Slack, Teams, email and notification webhooks under
+  **Settings › Notifications › System**. JSON receivers for those events are set up under **Settings › Notifications ›
+  Webhooks**. See [chapter 7](07-administration.md#notifications).
+
+## Advisory alerts
+
+The **Advisories** page ([chapter 4](04-working-with-findings.md#advisories)) lists new CVEs, exploited
+vulnerabilities and vendor advisories as the advisory feeds deliver them. Its alerts are notification events, not rule
+triggers: no Triage Engine rule starts on a new advisory. The three events are in the **Advisories** group of
+**Settings › Notifications**:
+
+* **New exploited vulnerability (CISA KEV)**: a new entry in the CISA catalog of known exploited vulnerabilities.
+* **New advisory matching the watchlist**: a new advisory names a term of the watchlist (and has at least the feed's
+  minimum severity for watchlist alerts, when one is set).
+* **New advisory affecting your findings**: a CVE of a new advisory is carried by an open finding.
+
+Who receives them:
+
+* Each person subscribes under **Settings › Notifications › Personal**, as an in-app alert or by email. An alert about
+  affected findings counts only the findings that person can see, and comes only when they can see at least one.
+* **Settings › Notifications › System** sends the events to Slack, Teams, email and notification webhooks; there, an
+  alert about affected findings counts all findings. A notification webhook receives the events as
+  `advisory_exploited`, `advisory_watchlist` and `advisory_affects_findings`, in the `X-Yaqiz-Event` header and in the
+  `event` field of the JSON.
+* A feed's first successful poll fills the list without alerts, and more than 10 advisories for the same event in one
+  poll arrive as one summary.
+
+Administrators choose the feeds, keep the watchlist and set each feed's minimum severity for watchlist alerts under
+**Settings › Risk & Matching › Advisory Feeds** ([chapter 7](07-administration.md#advisory-feeds)).
 
 Next: [6. Dashboards and reports](06-dashboards-and-reports.md)

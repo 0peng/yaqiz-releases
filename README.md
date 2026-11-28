@@ -19,7 +19,7 @@
 
 <p align="center">
   <a href="https://github.com/0peng/yaqiz-releases/releases/latest"><strong>⬇ Download the latest release</strong></a> ·
-  <a href="#whats-new-in-117"><strong>What's new</strong></a> ·
+  <a href="#whats-new-in-119"><strong>What's new</strong></a> ·
   <a href="#what-yaqiz-does"><strong>What it does</strong></a> ·
   <a href="#architecture"><strong>Architecture</strong></a> ·
   <a href="#install-step-by-step"><strong>Install</strong></a> ·
@@ -29,31 +29,87 @@
 
 ---
 
-## What's new in 1.1.7
+## What's new in 1.1.9
 
-Signing out clears the screen in every tab, change plans can delete assets, and Qualys reports can be imported as CSV.
+A vulnerability report that covers many servers goes in with one upload, the posture score waits for real scan data,
+CISO Assistant joins the connectors and the DefectDojo connector is removed. The full list is in the
+[1.1.9 release notes](https://github.com/0peng/yaqiz-releases/releases/tag/v1.1.9).
 
-- **Signing out (security fix)**: the page goes to the sign-in page at once and everything that was loaded is
-  removed from the browser; other open tabs of the same browser follow, and the Back button no longer shows the
-  previous page. Before, the page that was open could stay on screen after signing out (no data could be loaded any
-  more, but what was shown stayed visible), which matters on a shared computer.
-- **Change plans delete assets**: a `delete` column in the spreadsheet, **Delete…** on **Assets › All** for the
-  assets you tick, and **Undo** of a plan now deletes the assets that plan created. The review lists every asset to
-  delete with its engagements, tests and findings before anything happens; deleting needs the Owner role on the
-  asset. See the [user guide](docs/user-guide/02-inventory.md#change-plans-bulk-changes-from-a-spreadsheet).
-- **Qualys CSV**: **Qualys Scan** accepts the scan results CSV and the CSV of Scan-based or Host-based vulnerability
-  reports, as well as XML. Severities 1–5 are read as Qualys levels (5 = Critical).
+- **One upload for many assets**: on **Connect → Import → Add Findings**, choose **Many assets**, upload the report as
+  the scanner exported it (Qualys, Nessus or OpenVAS, or a findings spreadsheet with a Host column) and click **Check
+  matches**. Yaqiz matches each host to its asset by IP address or host name and shows a preview: which host goes to
+  which asset, how it was matched, and which hosts match no asset. **Import to N assets** then imports each asset's
+  findings exactly like an upload to that asset (the same permissions, deduplication, SLAs and triage rules), so every
+  owner sees exactly their findings. See the
+  [user guide](docs/user-guide/03-bringing-in-findings.md#one-upload-for-many-assets).
+- **Posture score**: Home shows **No score yet** until the first scan is imported, instead of a good score for an
+  estate that nothing has scanned. Areas without data of their own earn points only as far as recent scans cover your
+  assets, so scores change after the upgrade.
+- **CISO Assistant connector** (community or enterprise edition): pulls the open findings (pentests, audits, red-team
+  exercises) and the open vulnerabilities of each CISO Assistant asset with a personal access token, optionally for
+  one domain. Items closed in CISO Assistant are closed in Yaqiz at the next sync. The same JSON can be uploaded under
+  **Connect → Import → Add Findings** (scan type **CISO Assistant**): Yaqiz now imports 98 report formats and offers
+  26 upstream connectors.
+- **DefectDojo connector removed**: the upgrade switches existing DefectDojo connectors off. The findings they
+  imported stay in Yaqiz with their history, and **Connect → Upstream** still lists the connectors, with the type
+  **DefectDojo (removed in 1.1.9)**, until you delete them. The DefectDojo-compatible import API
+  (`/api/v2/import-scan/`, `/api/v2/reimport-scan/`) is unchanged.
+- **Commands for operating and troubleshooting**: `docs/cli-reference.md` in the package documents every deployment
+  script and management command, how to check each part of the server, and the fix for common problems.
+  `sudo ./deploy/help.sh` prints them on the server, and every script answers `--help` without changing anything. The
+  new `reset_mfa <username>` command removes the two-step verification of the only administrator after a lost phone
+  (other accounts: **Reset MFA** on the user's page).
 
-This builds on **1.1.6** (97 scanner formats, working connectors, issue-tracker mappings that do what they say),
-**1.1.5** (security fixes from an independent assessment, Settings → System Status, email, backups and external
-PostgreSQL set up by the installer, encrypted stored credentials, Excel and Word findings import) and **1.1.4** and
-**1.1.3** (hardening; no demo data or demo accounts in release packages).
+### New in 1.1.8
+
+Coming from 1.1.7 or earlier, you also get the changes of 1.1.8
+([release notes](https://github.com/0peng/yaqiz-releases/releases/tag/v1.1.8)):
+
+- **Advisories**: new CVEs and zero-days from CISA KEV, NVD, the GitHub Advisory Database and RSS feeds, polled every
+  hour, with the open findings and assets each one affects, a watchlist of your products and vendors, and alerts in
+  the app, by e-mail, Slack, Teams or webhook. Feeds and watchlist: **Settings → Risk & Matching → Advisory Feeds**.
+- **Backups** are read back after writing, and can be encrypted, written to a mounted share and copied to another
+  server.
+- **Owners, categories and age**: **Assign owner…** on **Inventory → Assets → All** gives a person or group a role on
+  many assets at once. Every finding gets a category (Windows OS, Unix / Linux OS, application, web, database,
+  network …) and an end-of-life flag (EOS/EOL), and the findings list and the Insights pages filter by owner, group,
+  category, EOS/EOL and age.
+- **Connectors** for Qualys VMDR and WAS, Rapid7 InsightVM, Tenable Security Center, Burp Suite DAST, Acunetix,
+  Invicti, ZAP, Nuclei, Microsoft Defender for Endpoint, CrowdStrike Falcon Spotlight, Checkmarx One, Fortify, Wiz,
+  Harbor, GitLab and report files on a web server (**Report from URL**); **ManageEngine ServiceDesk Plus** tickets.
+- **Sign out after inactivity** (30 minutes by default), and the bundled database and job queue on **PostgreSQL 19**
+  and **Valkey 9.2**.
+
+This builds on **1.1.7** (signing out clears the screen in every tab, change plans delete assets, Qualys CSV),
+**1.1.6** (51 more scanner formats, working connectors, issue-tracker mappings that do what they say), **1.1.5**
+(security fixes from an independent assessment, Settings → System Status, email, backups and external PostgreSQL set up
+by the installer, encrypted stored credentials, Excel and Word findings import) and **1.1.4** and **1.1.3** (hardening;
+no demo data or demo accounts in release packages).
 
 > [!IMPORTANT]
 > **Upgrading from an earlier version?**
 >
-> - **1.1.7** needs no configuration change. Browser tabs left open during the upgrade keep the previous version of
->   the app until they are reloaded: reload Yaqiz after upgrading (sessions are kept; nobody has to sign in again).
+> - **1.1.9** needs no configuration change. The upgrade switches DefectDojo connectors off (see above), and posture
+>   scores change. Browser tabs left open during the upgrade keep the previous version of the app until they are
+>   reloaded: reload Yaqiz after upgrading (sessions are kept).
+> - Upgrading from **1.1.7 or earlier** (the changes of 1.1.8):
+>   - **The bundled database moves from PostgreSQL 16 to PostgreSQL 19**, automatically and once: Yaqiz stops, the
+>     data is copied in one transaction and the row count of every table is compared before the new version starts.
+>     If anything fails, nothing is lost and the previous version starts again. The move needs the size of the
+>     database plus 1 GB free where Docker keeps its data (`df -h /var/lib/docker` shows it) and makes the upgrade a
+>     few minutes longer. An external PostgreSQL server (`--db-host`) is not changed.
+>   - **The PostgreSQL 16 data is kept unchanged** in its volume, for going back to your previous version. Once the
+>     new version runs well, remove it with the command the upgrade prints (`docker volume rm yaqiz_pgdata`). Going
+>     back is described in `docs/on-prem-installation.md`, section 7.
+>   - The job queue runs on **Valkey 9.2**, on a new volume: running jobs finish before the switch, and the upgrade
+>     prints how to remove the old queue volume.
+>   - **Backups made by 1.1.8 and later restore only into 1.1.8 and later**, not into 1.1.7 or earlier.
+>   - **People are signed out after 30 minutes without activity**; a minute before, a **Still there?** dialog offers
+>     **Stay signed in**. Change the time, or turn it off with 0, under **Settings → System Settings → Users → Sign
+>     out after inactivity**. API tokens (scripts, CI/CD) are not affected.
+>   - **Advisories** need the server to reach `www.cisa.gov`, `services.nvd.nist.gov`, `api.github.com` and the RSS
+>     feeds you turn on or add, over HTTPS. Without that, the **Advisories** page stays empty and each feed shows its
+>     last error.
 > - Upgrading from **1.1.2 or earlier**: installations made with the former `--demo` option had demo accounts
 >   (alice, bob, carol, ci-bot) that shared one published password; the upgrade switches their passwords off, and
 >   the `--demo` option and `YQ_SEED_DEMO` no longer exist. Very old HTTPS clients without modern ciphers can no
@@ -70,12 +126,14 @@ PostgreSQL set up by the installer, encrypted stored credentials, Excel and Word
 >     the 1.1.5 release notes).
 >   - After the upgrade, open **Settings → System Status**. If it reports no backup schedule, run
 >     `sudo ./deploy/schedule-backups.sh` (an upgrade does not change how backups are scheduled).
-> - An external database configured with a `docker-compose.override.yml`: move its settings to `.env` or re-run
->   `install.sh --db-host …` so that backups dump that server (see the 1.1.5 release notes).
+> - An external database configured with a `docker-compose.override.yml`: move its settings to `.env`, so that
+>   backups dump that server (see the 1.1.5 release notes).
 > - Upgrading from **1.1.3 or earlier**: a scan import larger than 8 MB returns a background job that finishes
 >   shortly after, rather than a synchronous response.
-> - **The full list** is in the [1.1.7 release notes](https://github.com/0peng/yaqiz-releases/releases/tag/v1.1.7).
->   Coming from an older version, also read the [1.1.6](https://github.com/0peng/yaqiz-releases/releases/tag/v1.1.6),
+> - **The full list** is in the [1.1.9](https://github.com/0peng/yaqiz-releases/releases/tag/v1.1.9) and
+>   [1.1.8](https://github.com/0peng/yaqiz-releases/releases/tag/v1.1.8) release notes. Coming from an older version,
+>   also read the [1.1.7](https://github.com/0peng/yaqiz-releases/releases/tag/v1.1.7),
+>   [1.1.6](https://github.com/0peng/yaqiz-releases/releases/tag/v1.1.6),
 >   [1.1.5](https://github.com/0peng/yaqiz-releases/releases/tag/v1.1.5),
 >   [1.1.4](https://github.com/0peng/yaqiz-releases/releases/tag/v1.1.4) and
 >   [1.1.3](https://github.com/0peng/yaqiz-releases/releases/tag/v1.1.3) release notes.
@@ -91,24 +149,28 @@ those findings, recognizes the duplicates, ranks what is left by how likely it i
 affected system matters, and follows every issue until it is fixed — with SLAs, tickets, automation and reports for
 engineers and executives alike.
 
-Everything runs on **your** server. No data leaves your network, and the server does not need internet access at
-all: one download contains the whole platform.
+Everything runs on **your** server, and your data stays in your network: the vulnerability and advisory feeds receive
+none of it. Only what you configure yourself, such as an issue tracker, Slack, Teams, email or a cloud tool, receives
+data from Yaqiz. The server does not need internet access at all: one download contains the whole platform.
 
 | | |
 |---|---|
-| 🔌 **Collect** | 46 scanner and tool formats (Tenable Nessus, Qualys, OpenVAS, Trivy, Grype, Snyk, Semgrep, SonarQube, ZAP, Burp, Nuclei, Checkov, Prowler, AWS Security Hub, CycloneDX, SARIF, …), a no-code parser for any CSV / JSON / XML, scheduled connectors (Tenable Nessus, ManageEngine Vulnerability Manager Plus, GitHub, SonarQube, Dependency-Track, Snyk, Semgrep) and a REST API for CI/CD pipelines |
+| 🔌 **Collect** | 98 report formats (Tenable Nessus, Qualys, Rapid7, OpenVAS, Trivy, Grype, Snyk, Semgrep, SonarQube, Checkmarx, Fortify, ZAP, Burp, Nuclei, Checkov, Prowler, AWS Security Hub, CycloneDX, SARIF, CISO Assistant, …), Excel / Word / CSV findings and a no-code parser for any CSV / JSON / XML; one upload for a report that covers many servers, each server's findings going to its own asset; 26 scheduled connectors, grouped as in the app: vulnerability management (Qualys VMDR, Rapid7 InsightVM, Tenable, ManageEngine), web application scanning (Burp Suite DAST, Acunetix, Invicti, ZAP, Nuclei, Qualys WAS), code and dependencies (GitHub, GitLab, SonarQube, Checkmarx One, Fortify, Snyk, Semgrep, Dependency-Track), cloud and containers (Wiz, Harbor), endpoint security (Microsoft Defender for Endpoint, CrowdStrike Falcon Spotlight), platforms and report feeds (CISO Assistant, report files on a web server, generic JSON feeds); and a REST API for CI/CD pipelines |
 | 🧹 **Deduplicate** | The same issue reported twice, by one tool or several, becomes one finding; re-imports close what was fixed and reopen what came back |
 | 🎯 **Prioritize** | A 0–100 risk score and risk bands from severity, **EPSS** exploit probability, the **CISA Known Exploited Vulnerabilities** list, internet exposure and business criticality — so the urgent work rises to the top |
-| ⏱ **Track** | SLAs by severity or risk, due dates, breach alerts, risk acceptances with expiry and approval, full history of every change |
-| ⚙️ **Automate** | A visual rule engine: when a finding or import matches your conditions, change it, notify Slack / Teams / e-mail, or open a ticket in Jira, GitHub, GitLab or Azure DevOps |
-| 📊 **Report** | Command Center, drag-and-drop dashboards, executive and program insights, a CVE explorer and scheduled reports (HTML, Excel, CSV, JSON) |
-| 🗂 **Organize** | Organizations and assets with owners, criticality and exposure; import and reorganize your asset inventory from Excel or CSV with review and undo |
+| 🚨 **Watch** | The **Advisories** page: new CVEs and zero-days from CISA KEV, NVD, the GitHub Advisory Database and RSS feeds, with the open findings and assets each one affects, a watchlist of your products and vendors, and alerts in the app, by e-mail, Slack, Teams or webhook |
+| ⏱ **Track** | SLAs by severity or risk, due dates, breach alerts, risk acceptances with expiry and approval, full history of every change; a category for every finding (Windows OS, Unix / Linux OS, application, web, database, network …) and a flag for end-of-life software (EOS/EOL) |
+| ⚙️ **Automate** | A visual rule engine: when a finding or import matches your conditions, change it, notify Slack / Teams / e-mail, or open a ticket in Jira, GitHub, GitLab, Azure DevOps or ManageEngine ServiceDesk Plus |
+| 📊 **Report** | Command Center with a posture score, drag-and-drop dashboards, executive and program insights filtered by owner, group, category, end of life and age, a CVE explorer and scheduled reports (HTML, Excel, CSV, JSON) |
+| 🗂 **Organize** | Organizations and assets with owners, criticality and exposure; give a person or group a role on many assets at once; import and reorganize your asset inventory from Excel or CSV with review and undo |
 | 🔐 **Control access** | Roles per organization and asset for users and groups, two-step verification, LDAP / Active Directory and single sign-on (Entra ID, Okta, Keycloak, ADFS, Google), audit log |
 
 <p align="center">
   <img src="docs/images/finding-detail.png" alt="Finding detail for Log4Shell: known exploited, EPSS 97.5%, risk Urgent, SLA overdue, affected dependency and duplicate cluster" width="100%">
   <br/><sub><b>One finding, everything you need to decide:</b> exploit probability, CISA KEV status, risk and SLA, the affected
-  component, and the duplicates from other scanners merged into it. Screenshots show sample data.</sub>
+  component, and the duplicates from other scanners merged into it. The screenshots come from a test installation
+  filled with fictional sample data. A new installation starts empty: no organizations, assets or findings, and no
+  users other than your administrator.</sub>
 </p>
 
 ---
@@ -117,7 +179,8 @@ all: one download contains the whole platform.
 
 Yaqiz runs as six containers on a single Linux server with Docker. Only the web container is reachable from your
 network; the database and the job queue stay on the server's internal Docker network. Every outbound connection is
-optional and goes only where you configure it.
+optional: the public vulnerability and advisory feeds are fetched when the server can reach them, and everything else
+goes only where you configure it.
 
 ```mermaid
 flowchart LR
@@ -131,15 +194,16 @@ flowchart LR
     A["api<br/>REST API · sign-in"]
     WK["worker<br/>imports · rules ·<br/>notifications · reports"]
     B["scheduler<br/>periodic jobs"]
-    PG[("PostgreSQL 16<br/>your data")]
-    Q[("Valkey<br/>job queue")]
+    PG[("PostgreSQL 19<br/>your data")]
+    Q[("Valkey 9.2<br/>job queue")]
   end
 
   subgraph opt["Optional connections"]
     IDP["LDAP / Active Directory<br/>single sign-on"]
-    SC["Scanner APIs<br/>(Nessus, ManageEngine, …)"]
-    TK["Ticketing<br/>Jira · GitHub · GitLab · Azure DevOps"]
+    SC["Scanner and tool APIs<br/>(Qualys, Tenable, CISO Assistant, …)"]
+    TK["Ticketing<br/>Jira · GitHub · GitLab ·<br/>Azure DevOps · ServiceDesk Plus"]
     MSG["E-mail · Slack · Teams<br/>webhooks"]
+    FEED["Vulnerability and advisory feeds<br/>EPSS · CISA KEV · NVD ·<br/>GitHub · RSS"]
   end
 
   U -->|HTTPS| W
@@ -154,21 +218,24 @@ flowchart LR
   WK -.-> SC
   WK -.-> TK
   WK -.-> MSG
+  WK -.-> FEED
 ```
 
 | Component | Role |
 |---|---|
 | **web** | Serves the application, terminates TLS (HTTPS on 443, redirect from 80) and adds browser security headers |
 | **api** | REST API, sign-in (local accounts with MFA, LDAP, single sign-on) and permissions; applies database updates automatically on upgrade |
-| **worker** | Background work: imports, connector syncs, automation rules, notifications, tickets and reports |
-| **scheduler** | Starts periodic jobs: scheduled connectors and rules, SLA checks, reports, threat-intelligence updates |
-| **PostgreSQL 16** | All application data, in a Docker volume on the server |
-| **Valkey** | Job queue and shared cache |
+| **worker** | Background work: imports, connector syncs, advisory feeds, automation rules, notifications, tickets and reports |
+| **scheduler** | Starts periodic jobs: scheduled connectors and rules, SLA checks, reports, threat-intelligence updates, advisory feeds every hour |
+| **PostgreSQL 19** | All application data, in a Docker volume on the server |
+| **Valkey 9.2** | Job queue and shared cache |
 
-**Security by design:** TLS with HSTS and a strict Content Security Policy · two-step verification, account lockout
-and single sign-on · sign-in protected against cross-site request forgery · every query filtered by the user's roles · secrets never shown again after saving and masked in
-the audit log · outbound requests checked against internal and cloud-metadata addresses · containers run unprivileged,
-and the database and queue are never published · random secrets generated at install time in a root-only file.
+**Security by design:** TLS with HSTS and a strict Content Security Policy · two-step verification, account lockout,
+sign-out after inactivity and single sign-on · sign-in protected against cross-site request forgery · every query
+filtered by the user's roles · secrets never shown again after saving and masked in the audit log · outbound requests
+checked against internal and cloud-metadata addresses · containers run unprivileged, and the database and queue are
+never published · random secrets generated at install time in a root-only file · backups checked after writing and,
+if you choose, encrypted.
 
 ---
 
@@ -191,7 +258,7 @@ Yaqiz is installed on **your own Linux server or VM, inside your network**. The 
 | Server | Linux **x86_64**: Ubuntu 22.04 / 24.04, RHEL / Rocky 9 or Debian 12 (a VM is fine) |
 | Size | 4 vCPU, 8 GB RAM, 50 GB disk (more disk for several hundred thousand findings) |
 | Software | **Docker Engine 24+** with the **Compose** plugin |
-| Network | A DNS name for the server (e.g. `vm.example.com`); inbound TCP **443** and **80**. Internet access is **not** required |
+| Network | A DNS name for the server (e.g. `vm.example.com`); inbound TCP **443** and **80**. Internet access is **not** required (outbound HTTPS is only needed for the optional vulnerability and advisory feeds and for cloud tools) |
 | Certificate | Your TLS certificate (full chain) and private key, or a self-signed one for a trial |
 | Time | Server clock synchronized (NTP) |
 | Access | `root` or `sudo` on the server |
@@ -220,7 +287,7 @@ Run all the following commands in the same terminal. Set the version you are ins
 the [Releases page](https://github.com/0peng/yaqiz-releases/releases/latest)):
 
 ```bash
-VERSION=1.1.7
+VERSION=1.1.9
 ```
 
 **Server with internet access** — download both files directly on the server:
@@ -281,12 +348,14 @@ minutes.
 | `--tls provided` / `self-signed` | Use your certificate from step 4, or generate a self-signed one |
 | `--https-port N` / `--http-port N` | Different ports (default 443 / 80) |
 | `--offline FILE` | Load the container images from the package (no internet needed) |
+| `--no-build` | Use the images already loaded: for running the installer again later to change options, as in [Operations](#operations) (the package contains no sources to build images from) |
 | `--license FILE` | Install your license as part of the installation |
 | `--admin-email ADDRESS` | Email address of the initial administrator |
 | `--smtp-host NAME` with `--smtp-from`, `--smtp-user`, `--smtp-port`, `--smtp-security` | Your mail server, for notifications and the triage rules' emails |
 | `--smtp-test ADDRESS` | Send a test email; the installation fails if your mail server refuses it |
-| `--db-host NAME` with `--db-name`, `--db-user`, `--db-sslmode` | Your own PostgreSQL 13–16 server instead of the bundled database |
-| `--time-zone NAME`, `--backup-time HH:MM` | Time zone (default: the server's) and the time of the nightly backup (02:30) |
+| `--db-host NAME` with `--db-name`, `--db-user`, `--db-sslmode` | Your own PostgreSQL 14–19 server instead of the bundled database |
+| `--time-zone NAME`, `--backup-time HH:MM`, `--backup-keep N` | Time zone (default: the server's), the time of the nightly backup (02:30) and how many backups to keep (14) |
+| `--backup-dir PATH` with `--backup-target share`, `--backup-encrypt-to KEY`, `--backup-offsite USER@HOST:PATH` with `--backup-offsite-key FILE` | Write the backups to a mounted share, encrypt them, copy them to another server (see [Operations](#operations)) |
 
 ### 6. Sign in and start using Yaqiz
 
@@ -295,17 +364,25 @@ minutes.
 2. **Profile → Change password**, then **Profile → Two-step verification**.
 3. **Settings → License** shows who the installation is licensed to, the expiry date and the usage.
 4. **Settings → System Status**: fix anything it lists, and send a test email.
-5. Connect **LDAP / Active Directory** or **single sign-on**, and create users, groups and roles.
-6. Connect your scanners (Tenable Nessus, ManageEngine and others) under **Upstream**, upload scanner reports, or send
+5. Connect **LDAP / Active Directory** or **single sign-on**, and create users, groups and roles. To give a team a
+   role on many assets at once, tick them on **Inventory → Assets → All** and click **Assign owner…**.
+6. Bring in findings: connect your tools under **Connect → Upstream** (26 connectors, from Qualys, Rapid7 and Tenable
+   to Microsoft Defender, Wiz and CISO Assistant), upload scanner reports under **Connect → Import → Add Findings** (for
+   a report that covers many servers, choose **Many assets**: each server's findings go to its own asset), or send
    results from CI/CD with an API token.
-7. Copy the nightly backups in `/opt/yaqiz/backups` off the server.
+7. **Settings → Risk & Matching → Advisory Feeds**: add the products and vendors you run to the watchlist, then
+   subscribe to the advisory alerts under **Settings → Notifications → Personal** (for Slack, Teams and webhooks:
+   **Settings → Notifications → System**). The feeds need outbound HTTPS (see the upgrade notes above).
+8. Keep the nightly backups off the server: write them to a share, or copy them, encrypted, to another server (see
+   [Operations](#operations)).
 
 The complete guide — sizing, TLS, LDAP and single sign-on settings, private CAs, external PostgreSQL, backups and
-troubleshooting — is **`docs/on-prem-installation.md`** inside the package.
+troubleshooting — is **`docs/on-prem-installation.md`** inside the package. Every command for operating and
+troubleshooting the server is in **`docs/cli-reference.md`**, also inside the package.
 
 **Using Yaqiz day to day?** The **[user guide](docs/user-guide/README.md)** walks through the application with
 screenshots: signing in, organizing assets, importing scanner reports and Excel / Word findings, triaging findings,
-automating with triage rules and tickets, dashboards and reports, and administration.
+advisories, automating with triage rules and tickets, dashboards and reports, and administration.
 
 ---
 
@@ -316,7 +393,7 @@ installation folder** and upgrade. Your settings, certificates, data and backups
 backup first. Read the release notes on the release page first: they list the changes you may notice.
 
 ```bash
-VERSION=1.1.7
+VERSION=1.1.9
 ```
 
 ```bash
@@ -328,7 +405,9 @@ cd /opt/yaqiz && sudo ./deploy/upgrade.sh --offline yaqiz-$VERSION-images.tar.gz
 ```
 
 Each release page also lists the exact commands for that version. Afterwards you can delete the previous
-`yaqiz-<old version>-images.tar.gz` to free disk space.
+`yaqiz-<old version>-images.tar.gz` to free disk space. Coming from **1.1.7 or earlier**, the upgrade also moves the
+bundled database to PostgreSQL 19: check the free disk space first (see the upgrade notes under
+[What's new](#whats-new-in-119)).
 
 **A renewed license or more users and assets.** Your vendor sends you a new license file. Install it under
 **Settings → License**, or on the server — it takes effect immediately, without a restart:
@@ -353,15 +432,24 @@ Run these in `/opt/yaqiz`:
 | Task | Command |
 |---|---|
 | Status, configuration check and recent errors | `sudo ./deploy/status.sh` (the same as **Settings → System Status**) |
-| Backup (database, files, settings, certificates) | Nightly by default; now: `sudo ./deploy/backup.sh --keep 14`. Copy `backups/` off the server |
+| Every command for operating and troubleshooting | `sudo ./deploy/help.sh` (one topic: `sudo ./deploy/help.sh backup`, or `database`, `queue`, `tls`, …), explained in **`docs/cli-reference.md`** in the package. Every script answers `--help` without changing anything |
+| Backup (database, files, settings, certificates), checked after writing | Nightly by default; now: `sudo ./deploy/backup.sh --keep 14` |
+| Check the backup settings / check a backup | `sudo ./deploy/backup.sh --check` / `sudo ./deploy/backup.sh --verify` (add `--identity <key file>` to also read the content of an encrypted backup) |
+| Encrypt the backups | `sudo ./deploy/backup.sh --new-key yaqiz-backup.key` creates a key pair (keep the key file off the server), then `sudo ./deploy/install.sh --host vm.example.com --no-build --backup-encrypt-to age1…` with the public key it prints (`--no-build`: use the images already loaded) |
+| Backups on a share, or copied to another server | `sudo ./deploy/install.sh --host vm.example.com --no-build --backup-dir /mnt/backup/yaqiz --backup-target share`, or `… --backup-offsite user@host:/path --backup-offsite-key FILE` (only encrypted backups leave the server: encrypt them first) |
 | Change or stop the nightly backup | `sudo ./deploy/schedule-backups.sh --time 01:00 --keep 30` / `--remove` |
-| Restore a backup | `sudo ./deploy/restore.sh backups/<timestamp>` (on another server, copy `YQ_DATA_KEYS` into its `.env` first) |
+| Restore a backup | `sudo ./deploy/restore.sh backups/<timestamp>` (an encrypted backup: `--identity <key file>`; on another server, copy `YQ_DATA_KEYS` into its `.env` first) |
+| Remove the two-step verification of the only administrator (lost phone) | `sudo docker compose exec api python manage.py reset_mfa <username>` (other accounts: **Reset MFA** on the user's page) |
 | License status / install a renewal | `sudo ./deploy/license.sh` / `sudo ./deploy/license.sh renewal.lic` (or **Settings → License**) |
 | Support bundle for your vendor (passwords and secrets removed) | `sudo ./deploy/support-bundle.sh` |
 | Logs | `sudo docker compose logs -f api worker` |
 
-**Maintenance windows.** **Settings → System → Read-only mode** pauses all changes by users other than superusers.
-Everyone can still sign in, view and export, and a banner explains why changes are paused.
+**Running `install.sh` again** to change an option keeps your data, certificate and every setting you do not give
+again, except four: give the same `--host` as before, and `--tls`, `--http-port` and `--https-port` if you installed
+with them; left out, they return to their defaults (a self-signed certificate if none is installed, ports 80 and 443).
+
+**Maintenance windows.** **Settings → System Settings → General → Read-only mode** pauses all changes by users other
+than superusers. Everyone can still sign in, view and export, and a banner explains why changes are paused.
 
 **Licensing.** Licenses are checked on your server, offline. Administrators are reminded 30 days before expiry; after
 expiry and a grace period Yaqiz becomes read-only — nothing is ever deleted, everything stays visible and exportable,
